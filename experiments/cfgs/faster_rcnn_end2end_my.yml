@@ -1,0 +1,22 @@
+EXP_DIR: faster_rcnn_end2end
+TRAIN:
+  HAS_RPN: True
+  IMS_PER_BATCH: 1
+  BBOX_NORMALIZE_TARGETS_PRECOMPUTED: True
+  RPN_POSITIVE_OVERLAP: 0.7
+  RPN_BATCHSIZE: 256
+  PROPOSAL_METHOD: gt
+  BG_THRESH_LO: 0.0
+  ITERS: 70000
+  SOLVER: "models/pascal_voc/ZF/faster_rcnn_end2end/solver.prototxt"
+  DEF: "models/pascal_voc/ZF/faster_rcnn_end2end/train.prototxt"
+  IMDB: "voc_2007_trainval"
+  WEIGHTS: "data/imagenet_models/ZF.v2.caffemodel"
+TEST:
+  HAS_RPN: True
+  DEF: "models/pascal_voc/ZF/faster_rcnn_end2end/test.prototxt"
+  IMDB: "voc_2007_test"
+GPU_ID: 0
+NET: "ZF"
+DATASET: "pascal_voc"
+PT_DIR: "pascal_voc"

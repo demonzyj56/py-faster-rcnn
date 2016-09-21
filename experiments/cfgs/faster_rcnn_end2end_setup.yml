@@ -1,0 +1,15 @@
+TRAIN:
+  ITERS: 70000
+  SOLVER: "models/pascal_voc/ZF/faster_rcnn_end2end/solver.prototxt"
+  DEF: "models/pascal_voc/ZF/faster_rcnn_end2end/train.prototxt"
+  IMDB: "voc_2007_trainval"
+  WEIGHTS: "data/imagenet_models/ZF.v2.caffemodel"
+TEST:
+  DEF: "models/pascal_voc/ZF/faster_rcnn_end2end/test.prototxt"
+  IMDB: "voc_2007_test"
+GPU_ID: 0
+NET: "ZF"
+DATASET: "pascal_voc"
+PT_DIR: "pascal_voc"
+
+

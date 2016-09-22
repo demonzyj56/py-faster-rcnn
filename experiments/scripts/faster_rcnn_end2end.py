@@ -27,17 +27,19 @@ class Logger(object):
         #you might want to specify some extra behavior here.
         pass
 
-def train(cfgs):
+def train(stps):
     from train_net import combined_roidb
     from fast_rcnn.train import train_net
-    from fast_rcnn.config import get_output_dir
+    from fast_rcnn.config import cfg, get_output_dir
     print "Train with configs:"
-    print cfgs.TRAIN
-    solver = cfgs.SOLVER
-    gpu_id = cfgs.GPU_ID
-    iters = cfgs.TRAIN.ITERS
-    imdb_name = cfgs.TRAIN.IMDB
-    pretrained_model = cfgs.TRAIN.WEIGHTS
+    print cfg.TRAIN
+    print "Setup:"
+    print stps
+    solver = stps["SOLVER"]
+    gpu_id = stps["GPU_ID"]
+    iters  = stps["TRAIN"]["ITERS"]
+    imdb_name = stps["TRAIN"]["IMDB"]
+    pretrained_model = stps["TRAIN"]["WEIGHTS"]
     caffe.set_mode_gpu()
     caffe.set_device(gpu_id)
     imdb, roidb = combined_roidb(imdb_name)
@@ -51,12 +53,10 @@ def train(cfgs):
 
 
 
-def faster_rcnn_end2end(config_file=None, **kw):
+def faster_rcnn_end2end(config_file=None, setup_file=None, **kw):
     from fast_rcnn.config import cfg, cfg_from_file
     cfg_from_file(config_file)
-    net = cfg.NET
-    dataset = cfg.DATASET
-
+    stps = _read_setup_file(setup_file)
 
     logfile = "experiments/logs/faster_rcnn_end2end_{}_{}.txt.".format(net, dataset) + \
         datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -65,7 +65,7 @@ def faster_rcnn_end2end(config_file=None, **kw):
         sys.stdout = Logger(f)
         print "Logging output to {}".format(logfile)
         start = timer()
-        train(cfg)
+        train(stps)
         end = timer()
         print "elapse time: {} s".format(end-start)
 
@@ -80,9 +80,15 @@ def _add_path():
     add_path(lib_path)
     add_path(tools_path)
 
+def _read_setup_file(setup_file):
+    import yaml
+    with open(setup_file, 'r') as f:
+        return yaml.load(f)
+
 if __name__ == '__main__':
     _add_path()
-    faster_rcnn_end2end("experiments/cfgs/faster_rcnn_end2end_my.yml")
+    faster_rcnn_end2end("experiments/cfgs/faster_rcnn_end2end.yml",
+                        "experiments/cfgs/faster_rcnn_end2end_setup.yml")
 
 
 

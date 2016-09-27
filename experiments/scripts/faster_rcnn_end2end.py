@@ -7,7 +7,7 @@ import datetime
 import sys
 import os
 from timeit import default_timer as timer
-import caffe
+# import caffe
 
 class Logger(object):
     def __init__(self, log_file=None):
@@ -28,6 +28,7 @@ class Logger(object):
         pass
 
 def train(stps):
+    import caffe
     from train_net import combined_roidb
     from fast_rcnn.train import train_net
     from fast_rcnn.config import cfg, get_output_dir
@@ -35,8 +36,8 @@ def train(stps):
     print cfg.TRAIN
     print "Setup:"
     print stps
-    solver = stps["SOLVER"]
     gpu_id = stps["GPU_ID"]
+    solver = stps["TRAIN"]["SOLVER"]
     iters  = stps["TRAIN"]["ITERS"]
     imdb_name = stps["TRAIN"]["IMDB"]
     pretrained_model = stps["TRAIN"]["WEIGHTS"]
@@ -46,7 +47,7 @@ def train(stps):
     output_dir = get_output_dir(imdb)
     print '{:d} roidb entries'.format(len(roidb))
     print 'Output will be saved to `{:s}`'.format(output_dir)
-    train_net(solver, output_dir,
+    train_net(solver, roidb, output_dir,
               pretrained_model=pretrained_model,
               max_iters=iters)
 
@@ -57,6 +58,8 @@ def faster_rcnn_end2end(config_file=None, setup_file=None, **kw):
     from fast_rcnn.config import cfg, cfg_from_file
     cfg_from_file(config_file)
     stps = _read_setup_file(setup_file)
+    net = stps["NET"]
+    dataset = stps["DATASET"]
 
     logfile = "experiments/logs/faster_rcnn_end2end_{}_{}.txt.".format(net, dataset) + \
         datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -79,6 +82,7 @@ def _add_path():
     tools_path = os.path.join(this_dir, '..', '..', 'tools')
     add_path(lib_path)
     add_path(tools_path)
+    import _init_paths
 
 def _read_setup_file(setup_file):
     import yaml

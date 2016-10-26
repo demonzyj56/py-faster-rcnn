@@ -57,6 +57,8 @@ def faster_rcnn_end2end(config_file=None, setup_file=None, **kw):
     from fast_rcnn.config import cfg, cfg_from_file
     cfg_from_file(config_file)
     stps = _read_setup_file(setup_file)
+    net = stps["NET"]
+    dataset = stps["DATASET"]
 
     logfile = "experiments/logs/faster_rcnn_end2end_{}_{}.txt.".format(net, dataset) + \
         datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

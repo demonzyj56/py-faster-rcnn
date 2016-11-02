@@ -28,6 +28,7 @@ class Logger(object):
         pass
 
 def train(stps):
+    import _init_paths
     import caffe
     from train_net import combined_roidb
     from fast_rcnn.train import train_net
@@ -62,10 +63,11 @@ def faster_rcnn_end2end(config_file=None, setup_file=None, **kw):
     dataset = stps["DATASET"]
 
     logfile = "experiments/logs/faster_rcnn_end2end_{}_{}.txt.".format(net, dataset) + \
-        datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        datetime.datetime.now().strftime("%Y-%m-%d")
     with open(logfile, 'a') as f:
         # redirect stdout to logfile
         sys.stdout = Logger(f)
+        print "="*12 + datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + "="*12
         print "Logging output to {}".format(logfile)
         start = timer()
         train(stps)
@@ -82,7 +84,7 @@ def _add_path():
     tools_path = os.path.join(this_dir, '..', '..', 'tools')
     add_path(lib_path)
     add_path(tools_path)
-    import _init_paths
+    # import _init_paths
 
 def _read_setup_file(setup_file):
     import yaml

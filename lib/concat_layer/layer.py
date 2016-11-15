@@ -39,6 +39,6 @@ class PythonConcatLayer(caffe.Layer):
     def backward(self, top, propagate_down, bottom):
         if propagate_down[0]:
             bottom[0].diff[:, :, :bottom[1].shape[2], :bottom[1].shape[3]] = \
-                top[0].diff[:, :bottom[0].shape[2]]
+                top[0].diff[:, :bottom[0].shape[1]]
         if propagate_down[1]:
-            bottom[1].diff[...] = top[0].diff[:, bottom[0].shape[2]:]
+            bottom[1].diff[...] = top[0].diff[:, bottom[0].shape[1]:]

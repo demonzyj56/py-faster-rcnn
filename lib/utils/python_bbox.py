@@ -32,3 +32,4 @@ def bbox_overlaps(boxes, query_boxes):
                     box_area = (boxes[n, 2] - boxes[n, 0] + 1) * \
                         (boxes[n, 3] - boxes[n, 1] + 1)
                     overlaps[n, k] = inter / (qbox_area + box_area - inter)
+    return overlaps

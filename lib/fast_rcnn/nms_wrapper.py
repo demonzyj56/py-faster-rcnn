@@ -6,8 +6,15 @@
 # --------------------------------------------------------
 
 from fast_rcnn.config import cfg
-from nms.gpu_nms import gpu_nms
-from nms.cpu_nms import cpu_nms
+try:
+    from nms.gpu_nms import gpu_nms
+    from nms.cpu_nms import cpu_nms
+except ImportError:
+    print "Using python version of cpu nms"
+    from nms.py_cpu_nms import py_cpu_nms as cpu_nms
+    def gpu_nms(dets, thresh, device_id):
+        raise NotImplementedError
+
 
 def nms(dets, thresh, force_cpu=False):
     """Dispatch to either CPU or GPU NMS implementations."""

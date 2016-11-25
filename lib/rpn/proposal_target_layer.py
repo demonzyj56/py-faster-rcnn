@@ -11,7 +11,11 @@ import numpy as np
 import numpy.random as npr
 from fast_rcnn.config import cfg
 from fast_rcnn.bbox_transform import bbox_transform
-from utils.cython_bbox import bbox_overlaps
+try:
+    from utils.cython_bbox import bbox_overlaps
+except ImportError:
+    print "Using python version of bbox_overlaps"
+    from utils.python_bbox import bbox_overlaps
 
 DEBUG = False
 

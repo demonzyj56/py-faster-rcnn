@@ -7,6 +7,7 @@ import datetime
 import sys
 import os
 from timeit import default_timer as timer
+import argparse
 # import caffe
 
 class Logger(object):
@@ -26,6 +27,14 @@ class Logger(object):
         #this handles the flush command by doing nothing.
         #you might want to specify some extra behavior here.
         pass
+
+def parse_args():
+    parser = argparse.ArgumentError(description = \
+        'Train an end-to-end version of faster-rcnn.')
+    parser.add_argument('--set', dest='set_cfgs',
+                        help='set config keys', default=None)
+    args = parser.parse_args()
+    return args
 
 def train(stps):
     import _init_paths
@@ -55,9 +64,14 @@ def train(stps):
 
 
 
-def faster_rcnn_end2end(config_file=None, setup_file=None, **kw):
-    from fast_rcnn.config import cfg, cfg_from_file
+def faster_rcnn_end2end(config_file=None,
+                        setup_file=None,
+                        extra_cfgs=None,
+                        **kw):
+    from fast_rcnn.config import cfg, cfg_from_file, cfg_from_list
     cfg_from_file(config_file)
+    if args.set_cfgs is not None:
+        cfg_from_list(extra_cfgs)
     stps = _read_setup_file(setup_file)
     net = stps["NET"]
     dataset = stps["DATASET"]
@@ -72,7 +86,7 @@ def faster_rcnn_end2end(config_file=None, setup_file=None, **kw):
         start = timer()
         train(stps)
         end = timer()
-        print "elapse time: {} s".format(end-start)
+        print "elapse time: {} s".format(end - start)
 
 def add_path(path):
     if path not in sys.path:
@@ -93,8 +107,7 @@ def _read_setup_file(setup_file):
 
 if __name__ == '__main__':
     _add_path()
+    args = parse_args()
     faster_rcnn_end2end("experiments/cfgs/faster_rcnn_end2end.yml",
-                        "experiments/cfgs/faster_rcnn_end2end_setup.yml")
-
-
-
+                        "experiments/cfgs/faster_rcnn_end2end_setup.yml",
+                        args.set_cfgs)

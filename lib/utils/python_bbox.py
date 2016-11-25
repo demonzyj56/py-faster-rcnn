@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def bbox_overlap(boxes, query_boxes):
+def bbox_overlaps(boxes, query_boxes):
     """
     Parameters
     ----------

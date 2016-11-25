@@ -10,8 +10,12 @@
 __sets = {}
 
 from datasets.pascal_voc import pascal_voc
-from datasets.coco import coco
-import numpy as np
+try:
+    from datasets.coco import coco
+except ImportError:
+    print "Cython code for coco not compiled."
+    def coco(split, year):
+        raise NotImplementedError
 
 # Set up voc_<year>_<split> using selective search "fast" mode
 for year in ['2007', '2012']:

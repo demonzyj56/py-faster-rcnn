@@ -28,7 +28,12 @@ class AnchorTargetLayer(caffe.Layer):
     """
 
     def setup(self, bottom, top):
-        layer_params = yaml.load(self.param_str_)
+        try:
+            layer_params = yaml.load(self.param_str_)
+        except AttributeError:
+            layer_params = yaml.load(self.param_str)
+        except:
+            raise
         anchor_scales = layer_params.get('scales', (8, 16, 32))
         self._anchors = generate_anchors(scales=np.array(anchor_scales))
         self._num_anchors = self._anchors.shape[0]

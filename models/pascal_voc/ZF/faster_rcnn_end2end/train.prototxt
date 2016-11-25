@@ -403,7 +403,6 @@ layer {
   top: "fc6"
   dropout_param {
     dropout_ratio: 0.5
-    scale_train: false
   }
 }
 layer {
@@ -430,7 +429,6 @@ layer {
   top: "fc7"
   dropout_param {
     dropout_ratio: 0.5
-    scale_train: false
   }
 }
 layer {

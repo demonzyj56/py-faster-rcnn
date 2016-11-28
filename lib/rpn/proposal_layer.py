@@ -68,12 +68,6 @@ class ProposalLayer(caffe.Layer):
 
         # cfg_key = str(self.phase) # either 'TRAIN' or 'TEST'
         cfg_key = 'TRAIN' if self.phase == 0 else 'TEST'
-        if cfg_key == 'TRAIN':
-            print "Training stage in proposal_layer"
-        elif cfg_key == 'TEST':
-            print "Test stage in proposal_layer"
-        else:
-            raise NameError("Unknown keyword")
         pre_nms_topN  = cfg[cfg_key].RPN_PRE_NMS_TOP_N
         post_nms_topN = cfg[cfg_key].RPN_POST_NMS_TOP_N
         nms_thresh    = cfg[cfg_key].RPN_NMS_THRESH

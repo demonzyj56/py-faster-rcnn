@@ -29,7 +29,7 @@ class Logger(object):
         pass
 
 def parse_args():
-    parser = argparse.ArgumentError(description = \
+    parser = argparse.ArgumentParser(description = \
         'Train an end-to-end version of faster-rcnn.')
     parser.add_argument('--set', dest='set_cfgs',
                         help='set config keys', default=None)
@@ -98,7 +98,6 @@ def _add_path():
     tools_path = os.path.join(this_dir, '..', '..', 'tools')
     add_path(lib_path)
     add_path(tools_path)
-    # import _init_paths
 
 def _read_setup_file(setup_file):
     import yaml

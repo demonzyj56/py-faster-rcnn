@@ -106,6 +106,9 @@ class SolverWrapper(object):
             timer.toc()
             if self.solver.iter % (10 * self.solver_param.display) == 0:
                 print 'speed: {:.3f}s / iter'.format(timer.average_time)
+                # For debug use
+                #  for name, blob in self.solver.net.blobs.iteritems():
+                #      print name + '\t' + str(blob.data.shape)
 
             if self.solver.iter % cfg.TRAIN.SNAPSHOT_ITERS == 0:
                 last_snapshot_iter = self.solver.iter

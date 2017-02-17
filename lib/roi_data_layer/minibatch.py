@@ -23,7 +23,9 @@ def get_minibatch(roidb, num_classes):
         'num_images ({}) must divide BATCH_SIZE ({})'. \
         format(num_images, cfg.TRAIN.BATCH_SIZE)
     rois_per_image = cfg.TRAIN.BATCH_SIZE / num_images
-    fg_rois_per_image = np.round(cfg.TRAIN.FG_FRACTION * rois_per_image)
+    #  fg_rois_per_image = np.round(cfg.TRAIN.FG_FRACTION * rois_per_image)
+    # Note this cuases problem when using floating point indices in numpy 1.12
+    fg_rois_per_image = np.round(cfg.TRAIN.FG_FRACTION * rois_per_image).astype(np.int)
 
     # Get the input image blob, formatted for caffe
     im_blob, im_scales = _get_image_blob(roidb, random_scale_inds)

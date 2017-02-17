@@ -48,7 +48,11 @@ class SolverWrapper(object):
 
         self.solver_param = caffe_pb2.SolverParameter()
         with open(solver_prototxt, 'rt') as f:
-            pb2.text_format.Merge(f.read(), self.solver_param)
+            try:
+                pb2.text_format.Merge(f.read(), self.solver_param)
+            except AttributeError:
+                from google.protobuf import text_format
+                text_format.Merge(f.read(), self.solver_param)
 
         self.solver.net.layers[0].set_roidb(roidb)
 

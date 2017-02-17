@@ -115,12 +115,14 @@ class RoIDataLayer(caffe.Layer):
             # (n, x1, y1, x2, y2) specifying an image batch index n and a
             # rectangle (x1, y1, x2, y2)
             top[idx].reshape(1, 5)
+            #  top[idx].reshape(cfg.TRAIN.BATCH_SIZE, 5)
             self._name_to_top_map['rois'] = idx
             idx += 1
 
             # labels blob: R categorical labels in [0, ..., K] for K foreground
             # classes plus background
             top[idx].reshape(1)
+            #  top[idx].reshape(cfg.TRAIN.BATCH_SIZE)
             self._name_to_top_map['labels'] = idx
             idx += 1
 
@@ -128,16 +130,19 @@ class RoIDataLayer(caffe.Layer):
                 # bbox_targets blob: R bounding-box regression targets with 4
                 # targets per class
                 top[idx].reshape(1, self._num_classes * 4)
+                #  top[idx].reshape(cfg.TRAIN.BATCH_SIZE, self._num_classes * 4)
                 self._name_to_top_map['bbox_targets'] = idx
                 idx += 1
 
                 # bbox_inside_weights blob: At most 4 targets per roi are active;
                 # thisbinary vector sepcifies the subset of active targets
                 top[idx].reshape(1, self._num_classes * 4)
+                #  top[idx].reshape(cfg.TRAIN.BATCH_SIZE, self._num_classes * 4)
                 self._name_to_top_map['bbox_inside_weights'] = idx
                 idx += 1
 
                 top[idx].reshape(1, self._num_classes * 4)
+                #  top[idx].reshape(cfg.TRAIN.BATCH_SIZE, self._num_classes * 4)
                 self._name_to_top_map['bbox_outside_weights'] = idx
                 idx += 1
 

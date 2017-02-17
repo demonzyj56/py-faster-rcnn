@@ -20,25 +20,40 @@ class RoiDispatchLayer(caffe.Layer):
         self._param = eval(self.param_str)
         assert 'lower_bound' in self._param.keys()
         assert 'upper_bound' in self._param.keys()
-        # self._batch_size = cfg.TRAIN.BATCH_SIZE
-        print '[DEBUG] bottom_size = {}'.format(list(bottom[0].shape))
-        print '[DEBUG] batch_size = {:d}'.format(cfg.TRAIN.BATCH_SIZE)
+        self._batch_size = cfg.TRAIN.BATCH_SIZE
+        #  print '[DEBUG] bottom_size = {}'.format(list(bottom[0].shape))
+        #  print '[DEBUG] batch_size = {:d}'.format(cfg.TRAIN.BATCH_SIZE)
         # assert bottom[0].shape[0] == self._batch_size
-        self._small_rois, self._medium_rois, self._large_rois, self._arrangement = \
-            self._dispatch_rois(bottom[0].data, self._param['lower_bound'], \
-            self._param['upper_bound'])
+        #  self._small_rois, self._medium_rois, self._large_rois, self._arrangement = \
+        #      self._dispatch_rois(bottom[0].data, self._param['lower_bound'], \
+        #      self._param['upper_bound'])
+        #  print '[DEBUG] small_rois: {}'.format(str(self._small_rois.shape))
+        #  print '[DEBUG] medium_rois: {}'.format(str(self._medium_rois.shape))
+        #  print '[DEBUG] large_rois: {}'.format(str(self._large_rois.shape))
+        top[0].reshape(1, 5)
+        top[1].reshape(0, 5)
+        top[2].reshape(0, 5)
+        top[3].reshape(1)
 
     def reshape(self, bottom, top):
-        top[0].reshape(*self._small_rois.shape)
-        top[1].reshape(*self._medium_rois.shape)
-        top[2].reshape(*self._large_rois.shape)
-        top[3].reshape(self._batch_size)
+        #  top[0].reshape(*self._small_rois.shape)
+        #  top[1].reshape(*self._medium_rois.shape)
+        #  top[2].reshape(*self._large_rois.shape)
+        #  top[3].reshape(*self._batch_size)
+        pass
 
     def forward(self, bottom, top):
-        top[0].data[...] = self._small_rois
-        top[1].data[...] = self._medium_rois
-        top[2].data[...] = self._large_rois
-        top[3].data[...] = self._arrangement
+        _small_rois, _medium_rois, _large_rois, _arrangement = \
+            self._dispatch_rois(bottom[0].data, self._param['lower_bound'], \
+            self._param['upper_bound'])
+        top[0].reshape(*_small_rois.shape)
+        top[1].reshape(*_medium_rois.shape)
+        top[2].reshape(*_large_rois.shape)
+        top[3].reshape(self._batch_size)
+        top[0].data[...] = _small_rois
+        top[1].data[...] = _medium_rois
+        top[2].data[...] = _large_rois
+        top[3].data[...] = _arrangement
 
     def backward(self, top, propagate_down, bottom):
         pass
@@ -75,6 +90,6 @@ class RoiDispatchLayer(caffe.Layer):
         B[idx'] = A.
         '''
         rev = [0] * len(indices)
-        for i in xrange(len(indices)): 
+        for i in xrange(len(indices)):
             rev[indices[i]] = i
         return rev

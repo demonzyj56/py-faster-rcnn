@@ -18,6 +18,7 @@ import subprocess
 import uuid
 from voc_eval import voc_eval
 from fast_rcnn.config import cfg
+import json
 
 class pascal_voc(imdb):
     def __init__(self, image_set, year, devkit_path=None):
@@ -257,6 +258,27 @@ class pascal_voc(imdb):
                                        dets[k, 0] + 1, dets[k, 1] + 1,
                                        dets[k, 2] + 1, dets[k, 3] + 1))
 
+    def convert_pascal_dt(self, all_boxes, filename):
+        assert self._image_set == 'test', \
+            "Should convert only test detection result."
+        res = []
+        for cls_ind, cls in enumerate(self._classes):
+            if cls == '__background__':
+                continue
+            for im_ind, index in enumerate(self.image_index):
+                dets = all_boxes[cls_ind][im_ind]
+                if dets == []:
+                    continue
+                # The json result format used by coco is 0-based and of [x,y,w,h]
+                for k in xrange(dets.shape[0]):
+                    bbox = [dets[k, 0], dets[k, 1],
+                            dets[k, 2] - dets[k, 0] + 1, dets[k, 3] - dets[k, 1] + 1]
+                    bbox = [round(x, 1) for x in bbox]
+                    res.append({'image_id': int(index), 'category_id': cls_ind,
+                                'bbox': bbox, 'score': round(dets[k, -1], 3)})
+        with open(filename, 'wt') as f:
+            f.write(json.dumps(res))
+
     def _do_python_eval(self, output_dir = 'output'):
         annopath = os.path.join(
             self._devkit_path,
@@ -340,5 +362,11 @@ class pascal_voc(imdb):
 if __name__ == '__main__':
     from datasets.pascal_voc import pascal_voc
     d = pascal_voc('trainval', '2007')
+    dt = pascal_voc('test', '2007')
+    resfile = '/home/leoyolo/src/py-faster-rcnn/output/faster_rcnn_end2end/voc_2007_test/zf_faster_rcnn_iter_70000/detections.pkl'
+    with open(resfile, 'rb') as f:
+        detres = cPickle.load(f)
+    json_filename = '/home/leoyolo/Desktop/res.json'
+    dt.convert_pascal_dt(detres, json_filename)
     res = d.roidb
-    from IPython import embed; embed()
+    # from IPython import embed; embed()

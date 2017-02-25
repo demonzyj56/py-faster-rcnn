@@ -16,6 +16,8 @@ except ImportError:
 import numpy as np
 import scipy.sparse
 from fast_rcnn.config import cfg
+import cPickle
+
 
 class imdb(object):
     """Image database."""
@@ -254,4 +256,35 @@ class imdb(object):
 
     def competition_mode(self, on):
         """Turn competition mode on or off."""
+        pass
+
+    def sliding_windows_roidb(self):
+        """
+        It is reasonable to call all anchor boxes as sliding windows.
+        Given a database, enrich all anchor boxes with following information:
+        - boxes [x1, y1, x2, y2]
+        - gt_classes: the class number for maximum overlap ground truth box.
+        - gt_overlaps: overlap with each ground truth box.
+        - flipped: whether the bbox is flipped.
+        - seg_areas: the area of the bbox.
+        - (new) gt_delta: the bounding box target regressed to the nearest ground
+            truth bbox.
+        - id: an id which I am not sure if it is neceassary.
+        """
+        cache_file = os.path.join(self.cache_path, self.name + \
+            '_sliding_windows_roidb.pkl')
+        if os.path.exists(cache_file):
+            with open(cache_file, 'rb') as fid:
+                roidb = cPickle.load(fid)
+            print '{} sliding windows roidb loaded from {}'.format(self.name, cache_file)
+            return roidb
+
+        gt_roidb = self.gt_roidb()
+        roidb = self._load_sliding_windows_roidb(gt_roidb)
+
+        with open(cache_file, 'wb') as fid:
+            cPickle.dump(roidb, fid, cPickle.HIGHEST_PROTOCOL)
+        print 'wrote sliding windows roidb to {}'.format(cache_file)
+
+    def _load_sliding_windows_roidb(self, gt_roidb):
         pass

@@ -20,6 +20,8 @@ def parse_args():
                         default='selective_search', type=str)
     parser.add_argument('--rpn-file', dest='rpn_file',
                         default=None, type=str)
+    parser.add_argument('--area-size', dest='area',
+                        default='all', type=str)
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -48,12 +50,13 @@ if __name__ == '__main__':
 
     # ar, gt_overlaps, recalls, thresholds = \
     #     imdb.evaluate_recall(candidate_boxes=candidate_boxes)
-    ret = imdb.evaluate_recall(candidate_boxes=candidate_boxes)
+    ret = imdb.evaluate_recall(candidate_boxes=candidate_boxes, area=args.area)
     ar = ret['ar']
     gt_overlaps = ret['gt_overlaps']
     recalls = ret['recalls']
     thresholds = ret['thresholds']
     print 'Method: {}'.format(args.method)
+    print 'Evaluate Area: {}'.format(args.area)
     print 'AverageRec: {:.3f}'.format(ar)
 
     def recall_at(t):

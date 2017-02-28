@@ -46,6 +46,15 @@ def parse_args():
     parser.add_argument('--rand', dest='randomize',
                         help='randomize (do not use a fixed seed)',
                         action='store_true')
+    parser.add_argument('--test_during_train', dest='test_during_train',
+                        help='test when training using multiprocessing',
+                        action='store_true')
+    parser.add_argument('--test_gpu', dest='test_gpu',
+                        help='GPUD device to use when testing',
+                        default=5)
+    parser.add_argument('--test_imdb', dest='test_imdb_name',
+                        help='imdb to use for testing',
+                        default='voc_2007_test', type=str)
     parser.add_argument('--set', dest='set_cfgs',
                         help='set config keys', default=None,
                         nargs=argparse.REMAINDER)
@@ -109,4 +118,7 @@ if __name__ == '__main__':
 
     train_net(args.solver, roidb, output_dir,
               pretrained_model=args.pretrained_model,
-              max_iters=args.max_iters)
+              max_iters=args.max_iters,
+              test_during_train=args.test_during_train,
+              test_gpu=args.test_gpu,
+              test_imdb=args.test_imdb)

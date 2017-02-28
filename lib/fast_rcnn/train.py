@@ -13,6 +13,10 @@ import roi_data_layer.roidb as rdl_roidb
 from utils.timer import Timer
 import numpy as np
 import os
+import pprint
+import multiprocessing as mp
+from datasets.factory import get_imdb
+from fast_rcnn.test import test_net
 
 from caffe.proto import caffe_pb2
 import google.protobuf as pb2
@@ -24,7 +28,10 @@ class SolverWrapper(object):
     """
 
     def __init__(self, solver_prototxt, roidb, output_dir,
-                 pretrained_model=None):
+                 pretrained_model=None,
+                 test_during_train=False,
+                 test_gpu=-1,
+                 test_imdb=None):
         """Initialize the SolverWrapper."""
         self.output_dir = output_dir
 
@@ -55,6 +62,24 @@ class SolverWrapper(object):
                 text_format.Merge(f.read(), self.solver_param)
 
         self.solver.net.layers[0].set_roidb(roidb)
+
+        self.test_during_train = test_during_train
+        if test_during_train:
+            self.test_args = lambda t_model: dict(
+                gpu_id=test_gpu,
+                test_prototxt=self.solver.test_net[0],
+                test_model=t_model,  # To be modified on the fly
+                cfg=cfg,
+                imdb_name=test_imdb,
+                num_dets=100,
+                comp=False,
+                vis=False
+            )
+
+    def log_and_test_during_train(self, test_caffemodel):
+        p = mp.Process(target=test_model_mp, kwargs=self.test_args(test_caffemodel))
+        p.start()
+        p.join()
 
     def snapshot(self):
         """Take a snapshot of the network after unnormalizing the learned
@@ -113,10 +138,33 @@ class SolverWrapper(object):
             if self.solver.iter % cfg.TRAIN.SNAPSHOT_ITERS == 0:
                 last_snapshot_iter = self.solver.iter
                 model_paths.append(self.snapshot())
+                if self.test_during_train:  # test immediately after snapshot
+                    self.log_and_test_during_train(model_paths[-1])
 
         if last_snapshot_iter != self.solver.iter:
             model_paths.append(self.snapshot())
         return model_paths
+
+def test_model_mp(gpu_id, test_prototxt, test_model, cfg,
+        imdb_name, num_dets=100, comp=False, vis=False):
+    '''
+    Test the snapshot using a separate process.
+    '''
+    print 'Testing model: {}'.format(test_model)
+    print 'Using cfgs: '
+    pprint.pprint(cfg)
+
+    import caffe
+    caffe.set_mode_gpu()
+    caffe.set_device(gpu_id)
+    net = caffe.Net(test_prototxt, test_model, caffe.TEST)
+    net.name = os.path.splitext(os.path.basename(test_model))[0]
+    imdb = get_imdb(imdb_name)
+    imdb.competition_mode(comp)
+    if not cfg.TEST.HAS_RPN:
+        imdb.set_proposal_method(cfg.TEST.PROPOSAL_METHOD)
+
+    test_net(net, imdb, max_per_image=num_dets, vis=vis)
 
 def get_training_roidb(imdb):
     """Returns a roidb (Region of Interest database) for use in training."""

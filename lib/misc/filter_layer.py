@@ -6,6 +6,7 @@ import caffe
 import yaml
 from fast_rcnn.nms_wrapper import nms
 from fast_rcnn.bbox_transform import bbox_transform_inv
+from fast_rcnn.config import cfg
 
 
 class PythonFilterLayer(caffe.Layer):
@@ -17,6 +18,7 @@ class PythonFilterLayer(caffe.Layer):
             self.layer_params = yaml.load(self.param_str)
         except:
             raise
+        self.cfg_key = 'TRAIN' if self.phase == 0 else 'TEST'
 
     def reshape(self, bottom, top):
         pass
@@ -68,7 +70,8 @@ class TopNLayer(PythonFilterLayer):
 
     def setup(self, bottom, top):
         super(TopNLayer, self).setup(bottom, top)
-        self.top_N = min(self.layer_params['top_N'], bottom[0].shape[0])
+        self.top_N = self.layer_params.get('top_N', cfg[self.cfg_key].RPN_BATCHSIZE)
+        self.top_N = min(self.top_N, bottom[0].shape[0])
         self.score_column = int(self.layer_params.get('score_column', -1))
         self.reverse = self.layer_params.get('reverse', False)
         assert self.score_column < bottom[0].shape[1]

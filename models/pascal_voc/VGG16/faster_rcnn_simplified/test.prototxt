@@ -554,8 +554,8 @@ layer {
 }
 
 layer {
-  name: "prob"
+  name: "cls_prob"
   type: "Softmax"
   bottom: "cls_filtered"
-  top: "prob"
+  top: "cls_prob"
 }

@@ -1,17 +1,15 @@
 name: "VGG_ILSVRC_16_layers"
-
-input: "data"
-input_shape {
-  dim: 1
-  dim: 3
-  dim: 224
-  dim: 224
-}
-
-input: "rois"
-input_shape {
-  dim: 1 # to be changed on-the-fly to num ROIs
-  dim: 5 # [batch ind, x1, y1, x2, y2] zero-based indexing
+layer {
+  name: 'input-data'
+  type: 'Python'
+  top: 'data'
+  top: 'im_info'
+  top: 'gt_boxes'
+  python_param {
+    module: 'roi_data_layer.layer'
+    layer: 'RoIDataLayer'
+    param_str: "'num_classes': 21"
+  }
 }
 
 layer {
@@ -672,64 +670,100 @@ layer {
 }
 
 layer {
-  name: "loss_topN_weights"
+  name: "loss_topN_inds"
   bottom: "loss_sum"
-  top: "loss_topN_weights"
+  top: "loss_topN_inds"
   type: "Python"
   python_param {
-    module: "misc.topN_weight_layer"
-    layer: "TopNWeightLayer"
+    module: "misc.filter_layer"
+    layer: "TopNLayer"
     layer_param: "top_N: 256"
   }
 }
 
 layer {
+  name: "rpn_final"
+  type: "BatchReindex"
+  bottom: "rpn_filtered"
+  bottom: "loss_topN_inds"
+  top: "rpn_final"
+}
+
+layer {
+  name: "gt_objectness_final"
+  type: "BatchReindex"
+  bottom: "gt_objectness"
+  bottom: "loss_topN_inds"
+  top: "gt_objectness_final"
+  propagate_down: false
+  propagate_down: false
+}
+
+layer {
+  name: "cls_final"
+  type: "BatchReindex"
+  bottom: "cls_filtered"
+  bottom: "loss_topN_inds"
+  top: "cls_final"
+}
+
+layer {
+  name: "gt_cls_final"
+  type: "BatchReindex"
+  bottom: "gt_cls"
+  bottom: "loss_topN_inds"
+  top: "gt_cls_final"
+  propagate_down: false
+  propagate_down: false
+}
+
+layer {
+  name: "bbox_final"
+  type: "BatchReindex"
+  bottom: "bbox_filtered"
+  bottom: "loss_topN_inds"
+  top: "bbox_final"
+}
+
+layer {
+  name: "gt_delta_final"
+  type: "BatchReindex"
+  bottom: "gt_delta"
+  bottom: "loss_topN_inds"
+  top: "gt_delta_final"
+  propagate_down: false
+  propagate_down: false
+}
+
+layer {
   name: "loss_objectness"
   type: "SoftmaxWithLoss"
-  bottom: "rpn_filtered"
-  bottom: "gt_objectness"
-  bottom: "loss_topN_weights"
+  bottom: "rpn_final"
+  bottom: "gt_objectness_final"
   top: "loss_objectness"
   loss_weight: 1
-  loss_param {
-    normalization: PRE_FIXED
-    pre_fixed_normalizer: 256
-  }
   propagate_down: true
-  propagate_down: false
   propagate_down: false
 }
 
 layer {
   name: "loss_cls"
   type: "SoftmaxWithLoss"
-  bottom: "cls_filtered"
-  bottom: "gt_cls"
-  bottom: "loss_topN_weights"
+  bottom: "cls_final"
+  bottom: "gt_cls_final"
   top: "loss_cls"
   loss_weight: 1
-  loss_param {
-    normalization: PRE_FIXED
-    pre_fixed_normalizer: 256
-  }
   propagate_down: true
-  propagate_down: false
   propagate_down: false
 }
 
 layer {
   name: "loss_bbox"
   type: "SmoothL1Loss"
-  bottom: "bbox_filtered"
-  bottom: "gt_delta"
-  bottom: "loss_topN_weights"
+  bottom: "bbox_final"
+  bottom: "gt_delta_final"
   top: "loss_bbox"
   loss_weight: 1
-  loss_param {
-    normalization: PRE_FIXED
-    pre_fixed_normalizer: 256
-  }
   propagate_down: true
-  propagate_down: false
   propagate_down: false
 }

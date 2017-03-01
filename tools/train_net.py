@@ -52,7 +52,7 @@ def parse_args():
     parser.add_argument('--test_gpu', dest='test_gpu',
                         help='GPUD device to use when testing',
                         default=5)
-    parser.add_argument('--test_imdb', dest='test_imdb_name',
+    parser.add_argument('--test_imdb', dest='test_imdb',
                         help='imdb to use for testing',
                         default='voc_2007_test', type=str)
     parser.add_argument('--set', dest='set_cfgs',

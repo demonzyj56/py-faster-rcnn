@@ -77,6 +77,7 @@ class SolverWrapper(object):
             )
 
     def log_and_test_during_train(self, test_caffemodel):
+        print 'Testing at iteration {}'.foramt(self.solver.iter)
         p = mp.Process(target=test_model_mp, kwargs=self.test_args(test_caffemodel))
         p.start()
         p.join()
@@ -204,12 +205,18 @@ def filter_roidb(roidb):
     return filtered_roidb
 
 def train_net(solver_prototxt, roidb, output_dir,
-              pretrained_model=None, max_iters=40000):
+              pretrained_model=None, max_iters=40000,
+              test_during_train=False,
+              test_gpu=-1,
+              test_imdb=None):
     """Train a Fast R-CNN network."""
 
     roidb = filter_roidb(roidb)
     sw = SolverWrapper(solver_prototxt, roidb, output_dir,
-                       pretrained_model=pretrained_model)
+                       pretrained_model=pretrained_model,
+                       test_during_train=test_during_train,
+                       test_gpu=test_gpu,
+                       test_imdb=test_imdb)
 
     print 'Solving...'
     model_paths = sw.train_model(max_iters)

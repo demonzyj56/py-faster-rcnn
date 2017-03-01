@@ -9,7 +9,7 @@ import caffe
 import numpy as np
 import yaml
 from fast_rcnn.config import cfg
-from generate_anchors import generate_anchors
+from rpn.generate_anchors import generate_anchors
 from fast_rcnn.bbox_transform import bbox_transform_inv, clip_boxes
 from fast_rcnn.nms_wrapper import nms
 
@@ -45,9 +45,12 @@ class ProposalLayer(caffe.Layer):
         # rectangle (x1, y1, x2, y2)
         top[0].reshape(1, 5)
 
-        # scores blob: holds scores for R regions of interest
+        #  # scores blob: holds scores for R regions of interest
+        #  if len(top) > 1:
+        #      top[1].reshape(1, 1, 1, 1)
+        # ind blob:
         if len(top) > 1:
-            top[1].reshape(1, 1, 1, 1)
+            top[1].reshape(1)
 
     def forward(self, bottom, top):
         # Algorithm:

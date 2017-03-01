@@ -61,7 +61,7 @@ class NmsLayer(PythonFilterLayer):
 class TopNLayer(PythonFilterLayer):
     '''
     Input is N x M, where one of the M columns is the scores
-    for each sample.  Default is the last column.  Specify 
+    for each sample.  Default is the last column.  Specify
     `score_column` to indicate which column should be regarded
     as scores if not the last one.
     If `reverse` is specified, take the bottom N targets instead
@@ -74,16 +74,21 @@ class TopNLayer(PythonFilterLayer):
         self.top_N = min(self.top_N, bottom[0].shape[0])
         self.score_column = int(self.layer_params.get('score_column', -1))
         self.reverse = self.layer_params.get('reverse', False)
-        assert self.score_column < bottom[0].shape[1]
+        top[0].reshape(1)
 
     def reshape(self, bottom, top):
-        top[0].reshape(self.top_N)
+        pass
 
     def forward(self, bottom, top):
-        keep = np.argsort(bottom[0].data[:, self.score_column])
+        top_N = min(self.top_N, bottom[0].shape[0])
+        top[0].reshape(top_N)
+        if len(bottom[0].shape) > 1:
+            keep = np.argsort(bottom[0].data[:, self.score_column])
+        else:
+            keep = np.argsort(bottom[0].data)
         if not self.reverse:
             keep = keep[::-1]
-        top[0].data[...] = keep[:self.top_N]
+        top[0].data[...] = keep[:top_N]
 
 
 class ThresholdLayer(PythonFilterLayer):

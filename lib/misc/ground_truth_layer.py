@@ -10,17 +10,17 @@ except ImportError:
     from utils.python_bbox import bbox_overlaps
 from fast_rcnn.bbox_transform import bbox_transform
 
-class GroundTruthLayer(caffe.layer):
+class GroundTruthLayer(caffe.Layer):
     """
     This is the layer that takes in ground truth info
-    (labels and bboxes) and outputs suitable labels 
+    (labels and bboxes) and outputs suitable labels
     for training.
     """
     def setup(self, bottom, top):
         """
         bottom[0]: rois (im_batch + predicted_bboxes)
         bottom[1]: gt_boxes (boxes + cls_ind)
-        output: 
+        output:
         top[0]: objectness for each roi (under a specific overlap value)
         top[1]: bbox_deltas for each roi
         top[2]: cls for each roi (under a specific overlap value)
@@ -35,8 +35,11 @@ class GroundTruthLayer(caffe.layer):
         self.obj_ov = layer_params['overlap']
         self.cls_ov = layer_params.get('cls_overlap', self.obj_ov)
         assert len(bottom) == 2
-        assert bottom[0].shape[1] == 5
-        assert bottom[1].shape[1] == 5
+        #  assert bottom[0].shape[1] == 5
+        #  assert bottom[1].shape[1] == 5
+        top[0].reshape(1)
+        top[1].reshape(1, 4)
+        top[2].reshape(1)
 
     def reshape(self, bottom, top):
         pass
@@ -44,7 +47,8 @@ class GroundTruthLayer(caffe.layer):
     def forward(self, bottom, top):
         top_blobs = {'gt_objectness': None, 'gt_delta': None, 'gt_cls': None}
         top_names_to_inds = {'gt_objectness': 0, 'gt_delta': 1, 'gt_cls': 2}
-        ov = bbox_overlaps(bottom[0].data[1:, :], bottom[1].data[:-1, :])
+        ov = bbox_overlaps(bottom[0].data[:, 1:].astype(np.float),
+                           bottom[1].data[:, :-1].astype(np.float))
 
         # compute objectness
         max_ov = np.max(ov, axis=1)

@@ -7,7 +7,7 @@ import yaml
 
 class TransposeLayer(caffe.Layer):
     """
-    This layer reshape and transpose the feature map into 
+    This layer reshape and transpose the feature map into
     the same order by proposal layer.
     For proposal_layer, it transposes a blob from (1, KxA, H, W) to
     (1, H, W, KxA) and reshape to (HxWxA, K) where rows are ordered
@@ -25,19 +25,23 @@ class TransposeLayer(caffe.Layer):
         assert bottom[0].shape[0] == 1
         self.num_anchors = layer_params['num_anchors']
         self.feat_lens = bottom[0].channels // self.num_anchors
+        feat_lens = bottom[0].channels // self.num_anchors
+        num_samples = bottom[0].height * bottom[0].width * self.num_anchors
+        top[0].reshape(num_samples, feat_lens)
 
     def reshape(self, bottom, top):
         pass
 
     def forward(self, bottom, top):
+        feat_lens = bottom[0].channels // self.num_anchors
         num_samples = bottom[0].height * bottom[0].width * self.num_anchors
-        top[0].reshape(num_samples, self.feat_lens)
+        top[0].reshape(num_samples, feat_lens)
         top[0].data[...] = \
             bottom[0].data.transpose((0, 2, 3, 1)).reshape((-1, self.feat_lens))
 
 
     def backward(self, top, propogate_down, bottom):
-        top[0].diff[...] = \
-            bottom[0].diff.reshape(
+        bottom[0].diff[...] = \
+            top[0].diff.reshape(
                 (1, bottom[0].height, bottom[0].width, -1)
             ).transpose((0, 3, 1, 2))

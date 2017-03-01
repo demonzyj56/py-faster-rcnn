@@ -44,7 +44,10 @@ case $DATASET in
     ;;
 esac
 
-LOG="experiments/logs/faster_rcnn_simplified_${NET}_${EXTRA_ARGS_SLUG}.txt.`date +'%Y-%m-%d_%H-%M-%S'`"
+LOG_PATH="experiments/logs/faster_rcnn_simplified"
+mkdir -p ${LOG_PATH}
+# LOG="experiments/logs/faster_rcnn_simplified_${NET}_${EXTRA_ARGS_SLUG}.txt.`date +'%Y-%m-%d_%H-%M-%S'`"
+LOG=${LOG_PATH}/"${NET}_${EXTRA_ARGS_SLUG}.txt.`date +'%Y-%m-%d_%H-%M-%S'`"
 exec &> >(tee -a "$LOG")
 echo Logging output to "$LOG"
 
@@ -54,6 +57,9 @@ time ./tools/train_net.py --gpu ${GPU_ID} \
   --imdb ${TRAIN_IMDB} \
   --iters ${ITERS} \
   --cfg experiments/cfgs/faster_rcnn_simplified.yml \
+  --test_during_train \
+  --test_gpu 5 \
+  --test_imdb ${TEST_IMDB} \
   ${EXTRA_ARGS}
 
 set +x

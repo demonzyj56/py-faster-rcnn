@@ -452,21 +452,6 @@ layer {
   top: 'rpn_cls_prob_reshape'
   reshape_param { shape { dim: 0 dim: 18 dim: -1 dim: 0 } }
 }
-layer {
-  name: 'proposal'
-  type: 'Python'
-  bottom: 'rpn_cls_prob_reshape'
-  bottom: 'bbox_delta'
-  bottom: 'im_info'
-  top: 'rois'
-  top: 'reg_inds'
-  python_param {
-    module: 'misc.proposal_layer'
-    layer: 'ProposalLayer'
-    param_str: "'feat_stride': 16"
-  }
-}
-
 # bbox
 
 layer {
@@ -503,6 +488,21 @@ layer {
     bias_filler { type: "constant" value: 0 }
   }
 }
+layer {
+  name: 'proposal'
+  type: 'Python'
+  bottom: 'rpn_cls_prob_reshape'
+  bottom: 'bbox_delta'
+  bottom: 'im_info'
+  top: 'rois'
+  top: 'reg_inds'
+  python_param {
+    module: 'misc.proposal_layer'
+    layer: 'ProposalLayer'
+    param_str: "'feat_stride': 16"
+  }
+}
+
 
 # classification
 
@@ -561,6 +561,8 @@ layer {
   bottom: "feat_transpose"
   bottom: "reg_inds"
   top: "cls_filtered"
+  propagate_down: true
+  propagate_down: false
 }
 
 
@@ -570,6 +572,8 @@ layer {
   bottom: "rpn_transpose"
   bottom: "reg_inds"
   top: "rpn_filtered"
+  propagate_down: true
+  propagate_down: false
 }
 
 layer {
@@ -590,6 +594,8 @@ layer {
   bottom: "bbox_transpose"
   bottom: "reg_inds"
   top: "bbox_filtered"
+  propagate_down: true
+  propagate_down: false
 }
 
 layer {
@@ -651,6 +657,16 @@ layer {
 }
 
 layer {
+  name: "loss_bbox_vec_reshape"
+  type: "Reshape"
+  bottom: "loss_bbox_vec"
+  top: "loss_bbox_vec_reshape"
+  reshape_param {
+    shape {dim: -1}
+  }
+}
+
+layer {
   bottom: "dummy_loss_obj"
   bottom: "dummy_prob_obj"
   bottom: "dummy_loss_cls"
@@ -663,10 +679,10 @@ layer {
 layer {
   bottom: "loss_obj_vec"
   bottom: "loss_cls_vec"
-  bottom: "loss_bbox_vec"
+  bottom: "loss_bbox_vec_reshape"
   top: "loss_sum"
   name: "loss_sum"
-  type: "Eliwise"
+  type: "Eltwise"
 }
 
 layer {
@@ -677,7 +693,7 @@ layer {
   python_param {
     module: "misc.filter_layer"
     layer: "TopNLayer"
-    layer_param: "top_N: 256"
+    param_str: "'top_N': 256"
   }
 }
 
@@ -687,6 +703,8 @@ layer {
   bottom: "rpn_filtered"
   bottom: "loss_topN_inds"
   top: "rpn_final"
+  propagate_down: true
+  propagate_down: false
 }
 
 layer {
@@ -705,6 +723,8 @@ layer {
   bottom: "cls_filtered"
   bottom: "loss_topN_inds"
   top: "cls_final"
+  propagate_down: true
+  propagate_down: false
 }
 
 layer {
@@ -723,6 +743,8 @@ layer {
   bottom: "bbox_filtered"
   bottom: "loss_topN_inds"
   top: "bbox_final"
+  propagate_down: true
+  propagate_down: false
 }
 
 layer {

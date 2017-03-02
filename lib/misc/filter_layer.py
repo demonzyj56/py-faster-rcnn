@@ -71,7 +71,6 @@ class TopNLayer(PythonFilterLayer):
     def setup(self, bottom, top):
         super(TopNLayer, self).setup(bottom, top)
         self.top_N = self.layer_params.get('top_N', cfg[self.cfg_key].RPN_BATCHSIZE)
-        self.top_N = min(self.top_N, bottom[0].shape[0])
         self.score_column = int(self.layer_params.get('score_column', -1))
         self.reverse = self.layer_params.get('reverse', False)
         top[0].reshape(1)

@@ -21,6 +21,8 @@ from fast_rcnn.test import test_net
 from caffe.proto import caffe_pb2
 import google.protobuf as pb2
 
+_DEBUG = True
+
 class SolverWrapper(object):
     """A simple wrapper around Caffe's solver.
     This wrapper gives us control over he snapshotting process, which we
@@ -77,7 +79,7 @@ class SolverWrapper(object):
             )
 
     def log_and_test_during_train(self, test_caffemodel):
-        print 'Testing at iteration {}'.foramt(self.solver.iter)
+        print 'Testing at iteration {}'.format(self.solver.iter)
         p = mp.Process(target=test_model_mp, kwargs=self.test_args(test_caffemodel))
         p.start()
         p.join()
@@ -130,11 +132,12 @@ class SolverWrapper(object):
             timer.tic()
             self.solver.step(1)
             timer.toc()
+            if _DEBUG:
+                from misc.simplified_net_probe import simplified_net_probe
+                from ipdb import set_trace; set_trace()
+                simplified_net_probe(self.solver.net)
             if self.solver.iter % (10 * self.solver_param.display) == 0:
                 print 'speed: {:.3f}s / iter'.format(timer.average_time)
-                # For debug use
-                #  for name, blob in self.solver.net.blobs.iteritems():
-                #      print name + '\t' + str(blob.data.shape)
 
             if self.solver.iter % cfg.TRAIN.SNAPSHOT_ITERS == 0:
                 last_snapshot_iter = self.solver.iter

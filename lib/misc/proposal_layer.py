@@ -13,7 +13,7 @@ from rpn.generate_anchors import generate_anchors
 from fast_rcnn.bbox_transform import bbox_transform_inv, clip_boxes
 from fast_rcnn.nms_wrapper import nms
 
-DEBUG = False
+DEBUG = True
 
 class ProposalLayer(caffe.Layer):
     """
@@ -35,10 +35,10 @@ class ProposalLayer(caffe.Layer):
         self._anchors = generate_anchors(scales=np.array(anchor_scales))
         self._num_anchors = self._anchors.shape[0]
 
-        if DEBUG:
-            print 'feat_stride: {}'.format(self._feat_stride)
-            print 'anchors:'
-            print self._anchors
+        #  if DEBUG:
+        #      print 'feat_stride: {}'.format(self._feat_stride)
+        #      print 'anchors:'
+        #      print self._anchors
 
         # rois blob: holds R regions of interest, each is a 5-tuple
         # (n, x1, y1, x2, y2) specifying an image batch index n and a
@@ -176,6 +176,11 @@ class ProposalLayer(caffe.Layer):
         if len(top) > 1:
             top[1].reshape(*(inds.shape))
             top[1].data[...] = inds
+
+        if DEBUG:
+            np.set_printoptions(threshold=np.nan)
+            from ipdb import set_trace; set_trace()
+            print scores
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""

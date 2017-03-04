@@ -13,7 +13,7 @@ from rpn.generate_anchors import generate_anchors
 from fast_rcnn.bbox_transform import bbox_transform_inv, clip_boxes
 from fast_rcnn.nms_wrapper import nms
 
-DEBUG = True
+DEBUG = False
 
 class ProposalLayer(caffe.Layer):
     """
@@ -177,10 +177,11 @@ class ProposalLayer(caffe.Layer):
             top[1].reshape(*(inds.shape))
             top[1].data[...] = inds
 
-        if DEBUG:
-            np.set_printoptions(threshold=np.nan)
-            from ipdb import set_trace; set_trace()
-            print scores
+        if cfg.DEBUG:
+            pass
+            #  np.set_printoptions(threshold=np.nan)
+            #  from ipdb import set_trace; set_trace()
+            #  print scores
 
     def backward(self, top, propagate_down, bottom):
         """This layer does not propagate gradients."""

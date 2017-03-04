@@ -9,6 +9,8 @@ except ImportError:
     print "Using python version of bbox_overlaps"
     from utils.python_bbox import bbox_overlaps
 from fast_rcnn.bbox_transform import bbox_transform
+from fast_rcnn.config import cfg
+
 
 class GroundTruthLayer(caffe.Layer):
     """
@@ -22,8 +24,9 @@ class GroundTruthLayer(caffe.Layer):
         bottom[1]: gt_boxes (boxes + cls_ind)
         output:
         top[0]: objectness for each roi (under a specific overlap value)
-        top[1]: bbox_deltas for each roi
+        top[1]: bbox_deltas (under a specific overlap value)
         top[2]: cls for each roi (under a specific overlap value)
+        top[3]: bbox_inds for input rois to keep for bbox regression
         """
         # parse the layer parameter string, which must be valid YAML
         try:
@@ -32,49 +35,59 @@ class GroundTruthLayer(caffe.Layer):
             layer_params = yaml.load(self.param_str)
         except:
             raise
-        self.obj_ov = layer_params['overlap']
-        self.cls_ov = layer_params.get('cls_overlap', self.obj_ov)
+        #  self.obj_ov = layer_params.get('overlap', cfg.TRAIN.FG_THRESH)
+        #  self.cls_ov = layer_params.get('cls_overlap', self.obj_ov)
+        #  self.bbox_ov = layer_params.get('bbox_overlap', cfg.TRAIN.BBOX_THRESH)
+        self.bbox_ov = cfg.TRAIN.BBOX_THRESH
         assert len(bottom) == 2
-        #  assert bottom[0].shape[1] == 5
-        #  assert bottom[1].shape[1] == 5
         top[0].reshape(1)
         top[1].reshape(1, 4)
         top[2].reshape(1)
+        top[3].reshape(1)
 
     def reshape(self, bottom, top):
         pass
 
     def forward(self, bottom, top):
-        top_blobs = {'gt_objectness': None, 'gt_delta': None, 'gt_cls': None}
-        top_names_to_inds = {'gt_objectness': 0, 'gt_delta': 1, 'gt_cls': 2}
+        top_blobs = {'gt_objectness': None, 'gt_delta': None, 'gt_cls': None, 'roi_inds': None}
+        top_names_to_inds = {'gt_objectness': 0, 'gt_delta': 1, 'gt_cls': 2, 'roi_inds': 3}
         ov = bbox_overlaps(bottom[0].data[:, 1:].astype(np.float),
                            bottom[1].data[:, :-1].astype(np.float))
-
-        # compute objectness
         max_ov = np.max(ov, axis=1)
         argmax_ov = np.argmax(ov, axis=1)
-        obj_keep = np.where(max_ov > self.obj_ov)[0]
+        pos = np.where(max_ov > self.bbox_ov)[0]
+
+        # Objectness
         objectness = np.zeros((bottom[0].shape[0], ), dtype=np.float)
-        objectness[obj_keep] = 1.
+        objectness[pos] = 1.
         top_blobs['gt_objectness'] = objectness
 
-        # compute class_label
-        cls_keep = np.where(max_ov > self.cls_ov)[0]
-        cls_labels = np.zeros((bottom[0].shape[0],))
-        for k in cls_keep:
-            cls_labels[k] = bottom[1].data[argmax_ov[k], -1]
+        # cls
+        cls_labels = np.zeros((bottom[0].shape[0], ), dtype=np.float)
+        for i in pos:
+            cls_labels[i] = bottom[1].data[argmax_ov[i], -1]
         top_blobs['gt_cls'] = cls_labels
 
-        # compute gt_delta
-        gt_boxes_cord = bottom[1].data[argmax_ov, :-1]
-        gt_delta = bbox_transform(bottom[0].data[:, 1:], gt_boxes_cord)
+        # BBOX
+        bbox_keep = bottom[0].data[pos, 1:]
+        bbox_gt = [bottom[1].data[argmax_ov[i], :-1] for i in pos]
+        bbox_gt = np.vstack(bbox_gt)
+        gt_delta = bbox_transform(bbox_keep, bbox_gt)
         top_blobs['gt_delta'] = gt_delta
+
+        # BBOX inds
+        top_blobs['roi_inds'] = pos
 
         for name, blob in top_blobs.iteritems():
             ind = top_names_to_inds[name]
             top[ind].reshape(*(blob.shape))
             top[ind].data[...] = blob.astype(np.float32, copy=False)
 
+        if cfg.DEBUG:
+            np.set_printoptions(threshold=np.nan)
+            from ipdb import set_trace; set_trace()
+            print pos
+            print cls_labels
 
     def backward(self, top, propogate_down, bottom):
         pass

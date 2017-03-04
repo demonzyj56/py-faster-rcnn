@@ -58,6 +58,9 @@ def parse_args():
     parser.add_argument('--set', dest='set_cfgs',
                         help='set config keys', default=None,
                         nargs=argparse.REMAINDER)
+    parser.add_argument('--debug_mode', dest='debug_mode',
+                        help='Whether to run in debug mode (and set trace)',
+                        action='store_true')
 
     if len(sys.argv) == 1:
         parser.print_help()
@@ -91,12 +94,13 @@ if __name__ == '__main__':
     print('Called with args:')
     print(args)
 
+    cfg.GPU_ID = args.gpu_id
+    cfg.DEBUG = args.debug_mode
+
     if args.cfg_file is not None:
         cfg_from_file(args.cfg_file)
     if args.set_cfgs is not None:
         cfg_from_list(args.set_cfgs)
-
-    cfg.GPU_ID = args.gpu_id
 
     print('Using config:')
     pprint.pprint(cfg)

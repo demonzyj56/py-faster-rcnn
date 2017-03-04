@@ -207,6 +207,9 @@ __C.USE_GPU_NMS = True
 # Default GPU device id
 __C.GPU_ID = 0
 
+# Enter debug mode
+__C.DEBUG = False
+
 
 def get_output_dir(imdb, net=None):
     """Return the directory where experimental artifacts are placed.

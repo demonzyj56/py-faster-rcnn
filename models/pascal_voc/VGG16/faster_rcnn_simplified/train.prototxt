@@ -588,15 +588,15 @@ layer {
   }
 }
 
-layer {
-  name: "bbox_filtered"
-  type: "BatchReindex"
-  bottom: "bbox_transpose"
-  bottom: "reg_inds"
-  top: "bbox_filtered"
-  propagate_down: true
-  propagate_down: false
-}
+# layer {
+#   name: "bbox_filtered"
+#   type: "BatchReindex"
+#   bottom: "bbox_transpose"
+#   bottom: "reg_inds"
+#   top: "bbox_filtered"
+#   propagate_down: true
+#   propagate_down: false
+# }
 
 layer {
   name: "grouth_truth"
@@ -606,12 +606,35 @@ layer {
   top: "gt_objectness"
   top: "gt_delta"
   top: "gt_cls"
+  top: "roi_inds"
   python_param {
     module: "misc.ground_truth_layer"
     layer: "GroundTruthLayer"
     param_str: "'overlap': 0.5"
   }
 }
+
+# Deal with bbox separately
+layer {
+  name: "bbox_inds"
+  type: "BatchReindex"
+  bottom: "reg_inds"
+  bottom: "roi_inds"
+  top: "bbox_inds"
+  propagate_down: false
+  propagate_down: false
+}
+
+layer {
+  name: "bbox_filtered"
+  type: "BatchReindex"
+  bottom: "bbox_transpose"
+  bottom: "roi_inds"
+  top: "bbox_filtered"
+  propagate_down: true
+  propagate_down: false
+}
+
 
 layer {
   name: "loss_objectness_ohem"
@@ -657,14 +680,26 @@ layer {
 }
 
 layer {
-  name: "loss_bbox_vec_reshape"
-  type: "Reshape"
+  name: "loss_bbox_topN_inds"
+  type: "Python"
   bottom: "loss_bbox_vec"
-  top: "loss_bbox_vec_reshape"
-  reshape_param {
-    shape {dim: -1}
+  top: "loss_bbox_topN_inds"
+  python_param {
+    module: "misc.filter_layer"
+    layer: "TopNLayer"
+    param_str: "'top_N': 256"
   }
 }
+
+# layer {
+#   name: "loss_bbox_vec_reshape"
+#   type: "Reshape"
+#   bottom: "loss_bbox_vec"
+#   top: "loss_bbox_vec_reshape"
+#   reshape_param {
+#     shape {dim: -1}
+#   }
+# }
 
 layer {
   bottom: "dummy_loss_obj"
@@ -679,7 +714,6 @@ layer {
 layer {
   bottom: "loss_obj_vec"
   bottom: "loss_cls_vec"
-  bottom: "loss_bbox_vec_reshape"
   top: "loss_sum"
   name: "loss_sum"
   type: "Eltwise"
@@ -741,7 +775,7 @@ layer {
   name: "bbox_final"
   type: "BatchReindex"
   bottom: "bbox_filtered"
-  bottom: "loss_topN_inds"
+  bottom: "loss_bbox_topN_inds"
   top: "bbox_final"
   propagate_down: true
   propagate_down: false
@@ -751,7 +785,7 @@ layer {
   name: "gt_delta_final"
   type: "BatchReindex"
   bottom: "gt_delta"
-  bottom: "loss_topN_inds"
+  bottom: "loss_bbox_topN_inds"
   top: "gt_delta_final"
   propagate_down: false
   propagate_down: false

@@ -257,7 +257,6 @@ def test_net(net, imdb, max_per_image=100, thresh=0.05, vis=False):
         _t['im_detect'].tic()
         scores, boxes = im_detect(net, im, box_proposals)
         _t['im_detect'].toc()
-        from ipdb import set_trace; set_trace()
 
         _t['misc'].tic()
         # skip j = 0, because it's the background class

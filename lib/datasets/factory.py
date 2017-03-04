@@ -10,6 +10,7 @@
 __sets = {}
 
 from datasets.pascal_voc import pascal_voc
+from datasets.pascal_voc_sr import pascal_voc_sr
 try:
     from datasets.coco import coco
 except ImportError:
@@ -22,6 +23,12 @@ for year in ['2007', '2012']:
     for split in ['train', 'val', 'trainval', 'test']:
         name = 'voc_{}_{}'.format(year, split)
         __sets[name] = (lambda split=split, year=year: pascal_voc(split, year))
+
+# Set up voc_2007_<cat> using different generated image kind
+for year in ['2007']:
+    for cat in ['lr', 'hr', 'sr']:
+        name = 'voc_{}_{}'.format(year, cat)
+        __sets[name] = (lambda cat=cat, year=year: pascal_voc_sr(cat, year))
 
 # Set up coco_2014_<split>
 for year in ['2014']:

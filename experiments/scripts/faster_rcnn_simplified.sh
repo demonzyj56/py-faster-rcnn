@@ -57,9 +57,6 @@ time ./tools/train_net.py --gpu ${GPU_ID} \
   --imdb ${TRAIN_IMDB} \
   --iters ${ITERS} \
   --cfg experiments/cfgs/faster_rcnn_simplified.yml \
-  --test_during_train \
-  --test_gpu 5 \
-  --test_imdb ${TEST_IMDB} \
   ${EXTRA_ARGS}
 
 set +x

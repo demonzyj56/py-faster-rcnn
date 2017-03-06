@@ -87,7 +87,7 @@ class TopNLayer(PythonFilterLayer):
             keep = np.argsort(bottom[0].data)
         if not self.reverse:
             keep = keep[::-1]
-        top[0].data[...] = keep[:top_N]
+        top[0].data[...] = keep[:top_N].squeeze()
 
 
 class ThresholdLayer(PythonFilterLayer):

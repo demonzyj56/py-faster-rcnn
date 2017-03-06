@@ -21,7 +21,6 @@ from fast_rcnn.test import test_net
 from caffe.proto import caffe_pb2
 import google.protobuf as pb2
 
-_DEBUG = True
 
 class SolverWrapper(object):
     """A simple wrapper around Caffe's solver.
@@ -132,7 +131,8 @@ class SolverWrapper(object):
             timer.tic()
             self.solver.step(1)
             timer.toc()
-            if _DEBUG:
+            if cfg.DEBUG:
+                continue
                 from misc.simplified_net_probe import simplified_net_probe
                 from ipdb import set_trace; set_trace()
                 simplified_net_probe(self.solver.net)

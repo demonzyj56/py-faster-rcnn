@@ -615,15 +615,15 @@ layer {
 }
 
 # Deal with bbox separately
-layer {
-  name: "bbox_inds"
-  type: "BatchReindex"
-  bottom: "reg_inds"
-  bottom: "roi_inds"
-  top: "bbox_inds"
-  propagate_down: false
-  propagate_down: false
-}
+# layer {
+#   name: "bbox_inds"
+#   type: "BatchReindex"
+#   bottom: "reg_inds"
+#   bottom: "roi_inds"
+#   top: "bbox_inds"
+#   propagate_down: false
+#   propagate_down: false
+# }
 
 layer {
   name: "bbox_filtered"

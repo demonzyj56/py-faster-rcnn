@@ -3,6 +3,8 @@ from __future__ import division
 import numpy as np
 import caffe
 import yaml
+from utils.timer import Timer
+from fast_rcnn.config import cfg
 
 
 class TransposeLayer(caffe.Layer):
@@ -28,16 +30,22 @@ class TransposeLayer(caffe.Layer):
         feat_lens = bottom[0].channels // self.num_anchors
         num_samples = bottom[0].height * bottom[0].width * self.num_anchors
         top[0].reshape(num_samples, feat_lens)
+        self.ftimer, self.btimer = Timer(), Timer()
 
     def reshape(self, bottom, top):
         pass
 
     def forward(self, bottom, top):
+        self.ftimer.tic()
         feat_lens = bottom[0].channels // self.num_anchors
         num_samples = bottom[0].height * bottom[0].width * self.num_anchors
         top[0].reshape(num_samples, feat_lens)
         top[0].data[...] = \
             bottom[0].data.transpose((0, 2, 3, 1)).reshape((-1, self.feat_lens))
+        if cfg.DEBUG:
+            print '[{}] top shape: {}'.format(type(self).__name__, str(top[0].data.shape))
+            print '[{}] Forward time: {:3f}s'.format(type(self).__name__, self.ftimer.toc(average=False))
+            from ipdb import set_trace; set_trace()
 
 
     def backward(self, top, propogate_down, bottom):

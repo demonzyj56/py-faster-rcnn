@@ -10,6 +10,7 @@ except ImportError:
     from utils.python_bbox import bbox_overlaps
 from fast_rcnn.bbox_transform import bbox_transform
 from fast_rcnn.config import cfg
+from utils.timer import Timer
 
 
 class GroundTruthLayer(caffe.Layer):
@@ -44,11 +45,13 @@ class GroundTruthLayer(caffe.Layer):
         top[1].reshape(1, 4)
         top[2].reshape(1)
         top[3].reshape(1)
+        self.ftimer = Timer()
 
     def reshape(self, bottom, top):
         pass
 
     def forward(self, bottom, top):
+        self.ftimer.tic()
         top_blobs = {'gt_objectness': None, 'gt_delta': None, 'gt_cls': None, 'roi_inds': None}
         top_names_to_inds = {'gt_objectness': 0, 'gt_delta': 1, 'gt_cls': 2, 'roi_inds': 3}
         ov = bbox_overlaps(bottom[0].data[:, 1:].astype(np.float),
@@ -56,6 +59,12 @@ class GroundTruthLayer(caffe.Layer):
         max_ov = np.max(ov, axis=1)
         argmax_ov = np.argmax(ov, axis=1)
         pos = np.where(max_ov > self.bbox_ov)[0]
+
+        if cfg.DEBUG:
+            np.set_printoptions(threshold=np.nan)
+            #  from ipdb import set_trace; set_trace()
+            print 'Number of gt bbox: {}'.format(bottom[1].shape[0])
+            print 'Number of bbox filtered: {}'.format(len(pos))
 
         # Objectness
         objectness = np.zeros((bottom[0].shape[0], ), dtype=np.float)
@@ -69,14 +78,28 @@ class GroundTruthLayer(caffe.Layer):
         top_blobs['gt_cls'] = cls_labels
 
         # BBOX
-        bbox_keep = bottom[0].data[pos, 1:]
-        bbox_gt = [bottom[1].data[argmax_ov[i], :-1] for i in pos]
-        bbox_gt = np.vstack(bbox_gt)
-        gt_delta = bbox_transform(bbox_keep, bbox_gt)
-        top_blobs['gt_delta'] = gt_delta
+        pos = np.where(max_ov > 0.1)[0]
+        if len(pos) == 0:
+            pos = np.where(max_ov > 0)[0]
+            assert len(pos) > 0
+        if cfg.DEBUG:
+            #  set_trace()
+            print 'New number of bbox to backprop: {}'.format(len(pos))
+
+        if len(pos) > 0:
+            bbox_keep = bottom[0].data[pos, 1:]
+            bbox_gt = [bottom[1].data[argmax_ov[i], :-1] for i in pos]
+            bbox_gt = np.vstack(bbox_gt)
+            gt_delta = bbox_transform(bbox_keep, bbox_gt)
+            top_blobs['gt_delta'] = gt_delta
+        else:
+            top_blobs['gt_delta'] = np.zeros((0, 4), dtype=np.float)
 
         # BBOX inds
-        top_blobs['roi_inds'] = pos
+        if len(pos) > 0:
+            top_blobs['roi_inds'] = pos
+        else:
+            top_blobs['roi_inds'] = np.zeros((0, ), dtype=np.float)
 
         for name, blob in top_blobs.iteritems():
             ind = top_names_to_inds[name]
@@ -84,10 +107,8 @@ class GroundTruthLayer(caffe.Layer):
             top[ind].data[...] = blob.astype(np.float32, copy=False)
 
         if cfg.DEBUG:
-            np.set_printoptions(threshold=np.nan)
+            print '[{}] Forward time: {:3f}s'.format(type(self).__name__, self.ftimer.toc(average=False))
             from ipdb import set_trace; set_trace()
-            print pos
-            print cls_labels
 
     def backward(self, top, propogate_down, bottom):
         pass

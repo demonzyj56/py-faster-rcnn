@@ -11,7 +11,8 @@ import numpy as np
 import numpy.random as npr
 import cv2
 from fast_rcnn.config import cfg
-from utils.blob import prep_im_for_blob, im_list_to_blob
+from utils.blob import prep_im_for_blob, im_list_to_blob, \
+        im_to_lr, prep_im_for_blob_sr
 
 def get_minibatch(roidb, num_classes):
     """Given a roidb, construct a minibatch sampled from it."""
@@ -132,6 +133,8 @@ def _get_image_blob(roidb, scale_inds):
     """Builds an input blob from the images in the roidb at the specified
     scales.
     """
+    if cfg.DEBUG:
+        from ipdb import set_trace; set_trace()
     num_images = len(roidb)
     processed_ims = []
     im_scales = []
@@ -139,9 +142,18 @@ def _get_image_blob(roidb, scale_inds):
         im = cv2.imread(roidb[i]['image'])
         if roidb[i]['flipped']:
             im = im[:, ::-1, :]
+        if np.random.rand() < cfg.TRAIN.DEC_PROB:
+            im = im_to_lr(im, 2)
+            decimated = True
+        else:
+            decimated = False
         target_size = cfg.TRAIN.SCALES[scale_inds[i]]
-        im, im_scale = prep_im_for_blob(im, cfg.PIXEL_MEANS, target_size,
-                                        cfg.TRAIN.MAX_SIZE)
+        if not decimated and cfg.TRAIN.USE_SR and np.random.rand() < cfg.TRAIN.SR_PROB:
+            im, im_scale = prep_im_for_blob_sr(im, cfg.PIXEL_MEANS, target_size,
+                                               cfg.TRAIN.MAX_SIZE)
+        else:
+            im, im_scale = prep_im_for_blob(im, cfg.PIXEL_MEANS, target_size,
+                                            cfg.TRAIN.MAX_SIZE)
         im_scales.append(im_scale)
         processed_ims.append(im)
 

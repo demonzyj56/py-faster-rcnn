@@ -124,6 +124,14 @@ __C.TRAIN.RPN_BBOX_INSIDE_WEIGHTS = (1.0, 1.0, 1.0, 1.0)
 __C.TRAIN.RPN_POSITIVE_WEIGHT = -1.0
 
 
+# Options for multiscale training.
+# Whether to perform down sampling for each image.
+__C.TRAIN.DEC_PROB = -1.
+# Whether to perfom super resolution before upscaling instead of direct bilinear interpolation.
+__C.TRAIN.USE_SR = False
+__C.TRAIN.SR_PROB = -1.
+
+
 #
 # Testing options
 #

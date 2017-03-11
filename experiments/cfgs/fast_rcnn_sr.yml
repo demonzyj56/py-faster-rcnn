@@ -1,0 +1,6 @@
+EXP_DIR: fast_rcnn_sr
+TRAIN:
+  USE_SR: True
+  DEC_PROB: 0.1
+  SR_PROB: 0.1
+  SCALES: [400,500,600,700]

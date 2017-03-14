@@ -1,0 +1,8 @@
+EXP_DIR: faster_rcnn_alt_opt_sr
+TRAIN:
+  BG_THRESH_LO: 0.0
+  USE_SR: True
+  SR_PROB: 1.
+TEST:
+  HAS_RPN: True
+  USE_SR: True

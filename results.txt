@@ -1,0 +1,77 @@
+
+| classes     | vgg_fast_rcnn | vgg_fast_rcnn_upscale2 | vgg_faster_rcnn_end2end | vggm_faster_rcnn_alt_opt | vgg_faster_rcnn_alt_opt |
+| aeroplane   | 0.756         | 0.761                  | 0.747                   | 0.666                    | 0.679                   |
+| bicycle     | 0.785         | 0.784                  | 0.792                   | 0.706                    | 0.775                   |
+| bird        | 0.675         | 0.687                  | 0.686                   | 0.574                    | 0.664                   |
+| boat        | 0.566         | 0.569                  | 0.598                   | 0.478                    | 0.557                   |
+| bottle      | 0.404         | 0.396                  | 0.530                   | 0.354                    | 0.533                   |
+| bus         | 0.769         | 0.766                  | 0.764                   | 0.681                    | 0.800                   |
+| car         | 0.788         | 0.788                  | 0.804                   | 0.734                    | 0.802                   |
+| cat         | 0.786         | 0.828                  | 0.792                   | 0.732                    | 0.827                   |
+| chair       | 0.489         | 0.470                  | 0.530                   | 0.362                    | 0.518                   |
+| cow         | 0.718         | 0.753                  | 0.760                   | 0.658                    | 0.767                   |
+| diningtable | 0.656         | 0.686                  | 0.656                   | 0.606                    | 0.648                   |
+| dog         | 0.812         | 0.767                  | 0.814                   | 0.665                    | 0.767                   |
+| horse       | 0.787         | 0.796                  | 0.809                   | 0.772                    | 0.805                   |
+| motorbike   | 0.761         | 0.743                  | 0.774                   | 0.710                    | 0.751                   |
+| person      | 0.728         | 0.726                  | 0.783                   | 0.662                    | 0.771                   |
+| pottedplant | 0.338         | 0.321                  | 0.450                   | 0.282                    | 0.395                   |
+| sheep       | 0.697         | 0.661                  | 0.685                   | 0.586                    | 0.712                   |
+| sofa        | 0.681         | 0.689                  | 0.659                   | 0.582                    | 0.640                   |
+| train       | 0.749         | 0.751                  | 0.769                   | 0.694                    | 0.768                   |
+| tvmonitor   | 0.649         | 0.656                  | 0.737                   | 0.640                    | 0.733                   |
+| mAP         | 0.680         | 0.680                  | 0.707                   | 0.607                    | 0.696                   |
+
+| classes     | vggm_fast_rcnn | vggm_fast_rcnn_sr |
+| aeroplane   | 0.662          | 0.712             |
+| bicycle     | 0.714          | 0.692             |
+| bird        | 0.606          | 0.609             |
+| boat        | 0.468          | 0.438             |
+| bottle      | 0.299          | 0.296             |
+| bus         | 0.705          | 0.706             |
+| car         | 0.736          | 0.742             |
+| cat         | 0.746          | 0.745             |
+| chair       | 0.356          | 0.359             |
+| cow         | 0.678          | 0.657             |
+| diningtable | 0.612          | 0.626             |
+| dog         | 0.688          | 0.721             |
+| horse       | 0.740          | 0.705             |
+| motorbike   | 0.694          | 0.690             |
+| person      | 0.618          | 0.619             |
+| pottedplant | 0.266          | 0.291             |
+| sheep       | 0.566          | 0.575             |
+| sofa        | 0.614          | 0.625             |
+| train       | 0.689          | 0.710             |
+| tvmonitor   | 0.619          | 0.613             |
+| mAP         | 0.604          | 0.607             |
+
+The following results are configured as follows:
+For HR setting, the original test images are resized to 500x500 directly.
+For LR setting, the HR images are down-scaled to 250x250 and then up-scaled back to 500x500, using bilinear interpolation.
+For SR setting, the HR images are down-scaled to 250x250 and then up-scaled back to 500x500, using super resolution method.
+The super resolution method used here is FSRCNN.
+The network is trained on VGG16 using original faster_rcnn_end2end setting.
+
+| classes     | voc_2007_test_HR | voc_2007_test_LR | voc_2007_test_SR |
+| aeroplane   | 0.687            | 0.606            | 0.619            |
+| bicycle     | 0.769            | 0.688            | 0.697            |
+| bird        | 0.651            | 0.496            | 0.584            |
+| boat        | 0.561            | 0.427            | 0.456            |
+| bottle      | 0.434            | 0.278            | 0.323            |
+| bus         | 0.781            | 0.662            | 0.734            |
+| car         | 0.790            | 0.687            | 0.709            |
+| cat         | 0.795            | 0.669            | 0.758            |
+| chair       | 0.487            | 0.318            | 0.386            |
+| cow         | 0.749            | 0.601            | 0.619            |
+| diningtable | 0.669            | 0.575            | 0.591            |
+| dog         | 0.754            | 0.634            | 0.713            |
+| horse       | 0.796            | 0.739            | 0.768            |
+| motorbike   | 0.690            | 0.635            | 0.643            |
+| person      | 0.678            | 0.586            | 0.653            |
+| pottedplant | 0.447            | 0.338            | 0.355            |
+| sheep       | 0.630            | 0.475            | 0.492            |
+| sofa        | 0.669            | 0.492            | 0.613            |
+| train       | 0.763            | 0.665            | 0.677            |
+| tvmonitor   | 0.673            | 0.555            | 0.590            |
+| mAP         | 0.674            | 0.556            | 0.599            |
+

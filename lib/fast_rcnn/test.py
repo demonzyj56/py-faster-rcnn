@@ -16,7 +16,7 @@ import cv2
 import caffe
 from fast_rcnn.nms_wrapper import nms
 import cPickle
-from utils.blob import im_list_to_blob
+from utils.blob import im_list_to_blob, im_sr_and_resize
 import os
 
 def _get_image_blob(im):
@@ -30,12 +30,19 @@ def _get_image_blob(im):
         im_scale_factors (list): list of image scales (relative to im) used
             in the image pyramid
     """
-    im_orig = im.astype(np.float32, copy=True)
-    im_orig -= cfg.PIXEL_MEANS
-
-    im_shape = im_orig.shape
-    im_size_min = np.min(im_shape[0:2])
-    im_size_max = np.max(im_shape[0:2])
+    def _convert_and_mean_subtract(img):
+        img = img.astype(np.float32, copy=False)
+        img -= cfg.PIXEL_MEANS
+        return img
+    im_orig = im.copy()
+    #  im_orig = im.astype(np.float32, copy=True)
+    #  im_orig -= cfg.PIXEL_MEANS
+    #
+    #  im_shape = im_orig.shape
+    #  im_size_min = np.min(im_shape[0:2])
+    #  im_size_max = np.max(im_shape[0:2])
+    im_size_min = np.min(im.shape[:2])
+    im_size_max = np.max(im.shape[:2])
 
     processed_ims = []
     im_scale_factors = []
@@ -45,10 +52,15 @@ def _get_image_blob(im):
         # Prevent the biggest axis from being more than MAX_SIZE
         if np.round(im_scale * im_size_max) > cfg.TEST.MAX_SIZE:
             im_scale = float(cfg.TEST.MAX_SIZE) / float(im_size_max)
-        im = cv2.resize(im_orig, None, None, fx=im_scale, fy=im_scale,
-                        interpolation=cv2.INTER_LINEAR)
+        if cfg.TEST.USE_SR:
+            im = im_sr_and_resize(im_orig, im_scale)
+        else:
+            im = cv2.resize(im_orig, None, None, fx=im_scale, fy=im_scale,
+                            interpolation=cv2.INTER_LINEAR)
         im_scale_factors.append(im_scale)
         processed_ims.append(im)
+
+    processed_ims = [_convert_and_mean_subtract(img) for img in processed_ims]
 
     # Create a blob to hold the input images
     blob = im_list_to_blob(processed_ims)

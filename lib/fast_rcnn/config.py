@@ -171,6 +171,9 @@ __C.TEST.RPN_POST_NMS_TOP_N = 300
 # Proposal height and width both need to be greater than RPN_MIN_SIZE (at orig image scale)
 __C.TEST.RPN_MIN_SIZE = 16
 
+# Test using super resolution method.
+__C.TEST.USE_SR = False
+
 
 #
 # MISC

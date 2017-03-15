@@ -22,28 +22,28 @@
 | tvmonitor   | 0.649         | 0.656                  | 0.737                   | 0.640                    | 0.733                   |
 | mAP         | 0.680         | 0.680                  | 0.707                   | 0.607                    | 0.696                   |
 
-| classes     | vggm_fast_rcnn | vggm_fast_rcnn_sr |
-| aeroplane   | 0.662          | 0.712             |
-| bicycle     | 0.714          | 0.692             |
-| bird        | 0.606          | 0.609             |
-| boat        | 0.468          | 0.438             |
-| bottle      | 0.299          | 0.296             |
-| bus         | 0.705          | 0.706             |
-| car         | 0.736          | 0.742             |
-| cat         | 0.746          | 0.745             |
-| chair       | 0.356          | 0.359             |
-| cow         | 0.678          | 0.657             |
-| diningtable | 0.612          | 0.626             |
-| dog         | 0.688          | 0.721             |
-| horse       | 0.740          | 0.705             |
-| motorbike   | 0.694          | 0.690             |
-| person      | 0.618          | 0.619             |
-| pottedplant | 0.266          | 0.291             |
-| sheep       | 0.566          | 0.575             |
-| sofa        | 0.614          | 0.625             |
-| train       | 0.689          | 0.710             |
-| tvmonitor   | 0.619          | 0.613             |
-| mAP         | 0.604          | 0.607             |
+| classes     | vggm_fast_rcnn | vggm_fast_rcnn_sr_rand | vggm_faster_rcnn_sr_all |
+| aeroplane   | 0.662          | 0.712                  | 0.659                   |
+| bicycle     | 0.714          | 0.692                  | 0.692                   |
+| bird        | 0.606          | 0.609                  | 0.582                   |
+| boat        | 0.468          | 0.438                  | 0.420                   |
+| bottle      | 0.299          | 0.296                  | 0.355                   |
+| bus         | 0.705          | 0.706                  | 0.632                   |
+| car         | 0.736          | 0.742                  | 0.749                   |
+| cat         | 0.746          | 0.745                  | 0.716                   |
+| chair       | 0.356          | 0.359                  | 0.363                   |
+| cow         | 0.678          | 0.657                  | 0.652                   |
+| diningtable | 0.612          | 0.626                  | 0.576                   |
+| dog         | 0.688          | 0.721                  | 0.661                   |
+| horse       | 0.740          | 0.705                  | 0.764                   |
+| motorbike   | 0.694          | 0.690                  | 0.695                   |
+| person      | 0.618          | 0.619                  | 0.664                   |
+| pottedplant | 0.266          | 0.291                  | 0.323                   |
+| sheep       | 0.566          | 0.575                  | 0.581                   |
+| sofa        | 0.614          | 0.625                  | 0.552                   |
+| train       | 0.689          | 0.710                  | 0.697                   |
+| tvmonitor   | 0.619          | 0.613                  | 0.624                   |
+| mAP         | 0.604          | 0.607                  | 0.598                   |
 
 The following results are configured as follows:
 For HR setting, the original test images are resized to 500x500 directly.

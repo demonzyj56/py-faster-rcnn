@@ -1,4 +1,4 @@
-train_net: "models/pascal_voc/VGG_CNN_M_1024/faster_rcnn_alt_opt/stage1_rpn_train.pt"
+train_net: "models/pascal_voc/VGG_CNN_M_1024/rpn_small_obj/stage1_rpn_train.pt"
 
 base_lr: 0.001
 lr_policy: "step"
@@ -13,4 +13,4 @@ weight_decay: 0.0005
 # function
 snapshot: 0
 # We still use the snapshot prefix, though
-snapshot_prefix: "vgg_cnn_m_1024_rpn"
+snapshot_prefix: "vgg_cnn_m_1024_rpn_small_obj"

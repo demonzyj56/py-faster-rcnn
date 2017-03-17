@@ -16,6 +16,7 @@ Train only the rpn part, and generate corresponding proposals.
 """
 
 import _init_paths
+import caffe
 from fast_rcnn.train import get_training_roidb, train_net
 from fast_rcnn.config import cfg, cfg_from_file, cfg_from_list, get_output_dir
 from datasets.factory import get_imdb
@@ -96,8 +97,8 @@ def train_rpn(queue=None, imdb_names=None, init_model=None, solver=None,
     print('Using config:')
     pprint.pprint(cfg)
 
-    import caffe
-    _init_caffe(cfg)
+    #  import caffe
+    #  _init_caffe(cfg)
 
     #  roidb, imdb = get_roidb(imdb_name)
     imdb, roidb = combined_roidb(imdb_names)
@@ -113,7 +114,8 @@ def train_rpn(queue=None, imdb_names=None, init_model=None, solver=None,
         os.remove(i)
     rpn_model_path = model_paths[-1]
     # Send final model path through the multiprocessing queue
-    queue.put({'model_path': rpn_model_path})
+    #  queue.put({'model_path': rpn_model_path})
+    return {'model_path': rpn_model_path}
 
 def rpn_test(imdb_name=None, rpn_proposal_path=None, area='all'):
     """ Eval recall for generated proposals. """
@@ -164,29 +166,37 @@ def main():
         cfg_from_list(args.set_cfgs)
     cfg.GPU_ID = args.gpu_id
 
+    # fix the random seeds (numpy and caffe) for reproducibility
+    np.random.seed(cfg.RNG_SEED)
+    caffe.set_random_seed(cfg.RNG_SEED)
+    # set up caffe
+    caffe.set_mode_gpu()
+    caffe.set_device(cfg.GPU_ID)
+
     # queue for communicated results between processes
     mp_queue = mp.Queue()
-    # solves, iters, etc. for each training stage
-    #  solvers, max_iters, rpn_test_prototxt = get_solvers(args.net_name)
 
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
     print 'Stage 1 RPN, init from ImageNet model'
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 
     cfg.TRAIN.SNAPSHOT_INFIX = 'stage1'
-    mp_kwargs = dict(
-            queue=mp_queue,
-            imdb_names=args.imdb_name,
-            init_model=args.pretrained_model,
-            solver=args.solver,
-            max_iters=args.max_iters,
-            cfg=cfg)
-    p = mp.Process(target=train_rpn, kwargs=mp_kwargs)
-    p.start()
-    rpn_stage1_out = mp_queue.get()
-    p.join()
-    rpn_stage1_out = \
-        {'model_path': '/home/leoyolo/research/py-faster-rcnn-another/output/rpn/voc_2007_trainval/vgg_cnn_m_1024_rpn_stage1_iter_80000.caffemodel'}
+    rpn_stage1_out = train_rpn(imdb_names=args.imdb_name,
+                               init_model=args.pretrained_model,
+                               solver=args.solver,
+                               max_iters=args.max_iters,
+                               cfg=cfg)
+    #  mp_kwargs = dict(
+    #          queue=mp_queue,
+    #          imdb_names=args.imdb_name,
+    #          init_model=args.pretrained_model,
+    #          solver=args.solver,
+    #          max_iters=args.max_iters,
+    #          cfg=cfg)
+    #  p = mp.Process(target=train_rpn, kwargs=mp_kwargs)
+    #  p.start()
+    #  rpn_stage1_out = mp_queue.get()
+    #  p.join()
 
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
     print 'Stage 1 RPN, generate proposals for the test set'

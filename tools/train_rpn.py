@@ -27,7 +27,20 @@ import sys, os
 import multiprocessing as mp
 import cPickle
 import shutil
-from train_faster_rcnn_alt_opt import train_rpn, rpn_generate, get_roidb
+from train_faster_rcnn_alt_opt import rpn_generate
+from train_net import combined_roidb
+
+def _init_caffe(cfg):
+    """Initialize pycaffe in a training process.
+    """
+
+    import caffe
+    # fix the random seeds (numpy and caffe) for reproducibility
+    np.random.seed(cfg.RNG_SEED)
+    caffe.set_random_seed(cfg.RNG_SEED)
+    # set up caffe
+    caffe.set_mode_gpu()
+    caffe.set_device(cfg.GPU_ID)
 
 def parse_args():
     """
@@ -68,6 +81,39 @@ def parse_args():
 
     args = parser.parse_args()
     return args
+
+def train_rpn(queue=None, imdb_names=None, init_model=None, solver=None,
+              max_iters=None, cfg=None):
+    """Train a Region Proposal Network in a separate training process.
+    """
+
+    # Not using any proposals, just ground-truth boxes
+    cfg.TRAIN.HAS_RPN = True
+    cfg.TRAIN.BBOX_REG = False  # applies only to Fast R-CNN bbox regression
+    cfg.TRAIN.PROPOSAL_METHOD = 'gt'
+    cfg.TRAIN.IMS_PER_BATCH = 1
+    print 'Init model: {}'.format(init_model)
+    print('Using config:')
+    pprint.pprint(cfg)
+
+    import caffe
+    _init_caffe(cfg)
+
+    #  roidb, imdb = get_roidb(imdb_name)
+    imdb, roidb = combined_roidb(imdb_names)
+    print 'roidb len: {}'.format(len(roidb))
+    output_dir = get_output_dir(imdb)
+    print 'Output will be saved to `{:s}`'.format(output_dir)
+
+    model_paths = train_net(solver, roidb, output_dir,
+                            pretrained_model=init_model,
+                            max_iters=max_iters)
+    # Cleanup all but the final model
+    for i in model_paths[:-1]:
+        os.remove(i)
+    rpn_model_path = model_paths[-1]
+    # Send final model path through the multiprocessing queue
+    queue.put({'model_path': rpn_model_path})
 
 def rpn_test(imdb_name=None, rpn_proposal_path=None, area='all'):
     """ Eval recall for generated proposals. """
@@ -127,18 +173,18 @@ def main():
     print 'Stage 1 RPN, init from ImageNet model'
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 
-    #  cfg.TRAIN.SNAPSHOT_INFIX = 'stage1'
-    #  mp_kwargs = dict(
-    #          queue=mp_queue,
-    #          imdb_name=args.imdb_name,
-    #          init_model=args.pretrained_model,
-    #          solver=args.solver,
-    #          max_iters=args.max_iters,
-    #          cfg=cfg)
-    #  p = mp.Process(target=train_rpn, kwargs=mp_kwargs)
-    #  p.start()
-    #  rpn_stage1_out = mp_queue.get()
-    #  p.join()
+    cfg.TRAIN.SNAPSHOT_INFIX = 'stage1'
+    mp_kwargs = dict(
+            queue=mp_queue,
+            imdb_names=args.imdb_name,
+            init_model=args.pretrained_model,
+            solver=args.solver,
+            max_iters=args.max_iters,
+            cfg=cfg)
+    p = mp.Process(target=train_rpn, kwargs=mp_kwargs)
+    p.start()
+    rpn_stage1_out = mp_queue.get()
+    p.join()
     rpn_stage1_out = \
         {'model_path': '/home/leoyolo/research/py-faster-rcnn-another/output/rpn/voc_2007_trainval/vgg_cnn_m_1024_rpn_stage1_iter_80000.caffemodel'}
 

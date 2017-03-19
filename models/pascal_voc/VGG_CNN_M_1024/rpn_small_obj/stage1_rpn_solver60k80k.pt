@@ -14,3 +14,4 @@ weight_decay: 0.0005
 snapshot: 0
 # We still use the snapshot prefix, though
 snapshot_prefix: "vgg_cnn_m_1024_rpn_small_obj"
+iter_size: 2

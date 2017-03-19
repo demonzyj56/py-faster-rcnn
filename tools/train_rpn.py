@@ -28,7 +28,7 @@ import sys, os
 import multiprocessing as mp
 import cPickle
 import shutil
-from train_faster_rcnn_alt_opt import rpn_generate
+#  from train_faster_rcnn_alt_opt import rpn_generate
 from train_net import combined_roidb
 
 def _init_caffe(cfg):
@@ -117,6 +117,43 @@ def train_rpn(queue=None, imdb_names=None, init_model=None, solver=None,
     #  queue.put({'model_path': rpn_model_path})
     return {'model_path': rpn_model_path}
 
+def rpn_generate(queue=None, imdb_name=None, rpn_model_path=None, cfg=None,
+                 rpn_test_prototxt=None):
+    """Use a trained RPN to generate proposals.
+    """
+
+    cfg.TEST.RPN_PRE_NMS_TOP_N = -1     # no pre NMS filtering
+    cfg.TEST.RPN_POST_NMS_TOP_N = 2000  # limit top boxes after NMS
+    print 'RPN model: {}'.format(rpn_model_path)
+    print('Using config:')
+    pprint.pprint(cfg)
+
+    #  import caffe
+    #  _init_caffe(cfg)
+    #
+    # NOTE: the matlab implementation computes proposals on flipped images, too.
+    # We compute them on the image once and then flip the already computed
+    # proposals. This might cause a minor loss in mAP (less proposal jittering).
+    imdb = get_imdb(imdb_name)
+    print 'Loaded dataset `{:s}` for proposal generation'.format(imdb.name)
+
+    # Load RPN and configure output directory
+    rpn_net = caffe.Net(rpn_test_prototxt, rpn_model_path, caffe.TEST)
+    output_dir = get_output_dir(imdb)
+    print 'Output will be saved to `{:s}`'.format(output_dir)
+    # Generate proposals on the imdb
+    rpn_proposals = imdb_proposals(rpn_net, imdb)
+    # Write proposals to disk and send the proposal file path through the
+    # multiprocessing queue
+    rpn_net_name = os.path.splitext(os.path.basename(rpn_model_path))[0]
+    rpn_proposals_path = os.path.join(
+        output_dir, rpn_net_name + '_proposals.pkl')
+    with open(rpn_proposals_path, 'wb') as f:
+        cPickle.dump(rpn_proposals, f, cPickle.HIGHEST_PROTOCOL)
+    print 'Wrote RPN proposals to {}'.format(rpn_proposals_path)
+    #  queue.put({'proposal_path': rpn_proposals_path})
+    return {'proposal_path': rpn_proposals_path}
+
 def rpn_test(imdb_name=None, rpn_proposal_path=None, area='all'):
     """ Eval recall for generated proposals. """
     print 'RPN proposal: {}'.format(rpn_proposal_path)
@@ -197,21 +234,30 @@ def main():
     #  p.start()
     #  rpn_stage1_out = mp_queue.get()
     #  p.join()
+    #  rpn_stage1_out = \
+    #          {'model_path': '/home/leoyolo/research/py-faster-rcnn-another/output/rpn_small_obj/voc_2007_trainval/vgg_cnn_m_1024_rpn_small_obj_stage1_iter_80000.caffemodel'}
 
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
     print 'Stage 1 RPN, generate proposals for the test set'
     print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
 
-    mp_kwargs = dict(
-            queue=mp_queue,
-            imdb_name=args.test_imdb_name,
-            rpn_model_path=str(rpn_stage1_out['model_path']),
-            cfg=cfg,
-            rpn_test_prototxt=args.rpn_test_prototxt)
-    p = mp.Process(target=rpn_generate, kwargs=mp_kwargs)
-    p.start()
-    rpn_stage1_out['proposal_path'] = mp_queue.get()['proposal_path']
-    p.join()
+    rpn_stage1_out['proposal_path'] = \
+        rpn_generate(imdb_name=args.test_imdb_name,
+                     rpn_model_path=str(rpn_stage1_out['model_path']),
+                     cfg=cfg,
+                     rpn_test_prototxt=args.rpn_test_prototxt
+        )['proposal_path']
+
+    #  mp_kwargs = dict(
+    #          queue=mp_queue,
+    #          imdb_name=args.test_imdb_name,
+    #          rpn_model_path=str(rpn_stage1_out['model_path']),
+    #          cfg=cfg,
+    #          rpn_test_prototxt=args.rpn_test_prototxt)
+    #  p = mp.Process(target=rpn_generate, kwargs=mp_kwargs)
+    #  p.start()
+    #  rpn_stage1_out['proposal_path'] = mp_queue.get()['proposal_path']
+    #  p.join()
 
     for area in ['all', 'small', 'medium', 'large']:
 

@@ -1,0 +1,32 @@
+Note: The first result is from the first stage of rpn. 
+The second result uses small anchor boxes.  In specific, the base box sizes are [16^2, 32^2, 48^2].  The option `RPN_CLOBBER_POSITIVES` is used, meaning that when an anchor box satisfies both positive and negative conditions, then it is set to negative.  This is to suppress small boxes regressed to large ground truth, because Fast RCNN always assigns the nearest anchor box to ground truth as positive, by default.
+
+Method        | VGG_CNN_M_1024_rpn | VGG_CNN_M_1024_rpn_small_obj |
+Evaluate Area | all                |                              |
+AverageRec    | 0.565              | 0.125                        |
+Recall@0.5    | 0.976              | 0.282                        |
+Recall@0.6    | 0.933              | 0.221                        |
+Recall@0.7    | 0.785              | 0.144                        |
+Recall@0.8    | 0.345              | 0.046                        |
+Recall@0.9    | 0.033              | 0.003                        |
+Evaluate Area | small              |                              |
+AverageRec    | 0.241              | 0.373                        |
+Recall@0.5    | 0.657              | 0.911                        |
+Recall@0.6    | 0.438              | 0.715                        |
+Recall@0.7    | 0.221              | 0.366                        |
+Recall@0.8    | 0.058              | 0.093                        |
+Recall@0.9    | 0.002              | 0.012                        |
+Evaluate Area | medium             |                              |
+AverageRec    | 0.514              | 0.342                        |
+Recall@0.5    | 0.976              | 0.762                        |
+Recall@0.6    | 0.902              | 0.600                        |
+Recall@0.7    | 0.684              | 0.405                        |
+Recall@0.8    | 0.236              | 0.133                        |
+Recall@0.9    | 0.013              | 0.009                        |
+Evaluate Area | large              |                              |
+AverageRec    | 0.612              | 0.000                        |
+Recall@0.5    | 0.998              | 0.003                        |
+Recall@0.6    | 0.982              | 0.001                        |
+Recall@0.7    | 0.872              | 0.000                        |
+Recall@0.8    | 0.418              | 0.000                        |
+Recall@0.9    | 0.045              | 0.000                        |

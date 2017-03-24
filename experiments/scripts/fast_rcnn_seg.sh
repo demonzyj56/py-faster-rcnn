@@ -41,17 +41,18 @@ case $DATASET in
     ;;
 esac
 
-LOG_PATH="experiments/logs/fast_rcnn_seg"
+LOG_PATH="experiments/logs/fast_rcnn_seg_cls"
 mkdir -p ${LOG_PATH}
 LOG="${LOG_PATH}/${NET}_${EXTRA_ARGS_SLUG}.txt.`date +'%Y-%m-%d_%H-%M-%S'`"
 exec &> >(tee -a "$LOG")
 echo Logging output to "$LOG"
 
 time ./tools/train_net.py --gpu ${GPU_ID} \
-  --solver models/${PT_DIR}/${NET}/fast_rcnn_seg/solver.prototxt \
+  --solver models/${PT_DIR}/${NET}/fast_rcnn_seg_cls/solver.prototxt \
   --weights data/imagenet_models/${NET}.v2.caffemodel \
   --imdb ${TRAIN_IMDB} \
   --iters ${ITERS} \
+  --cfg experiments/cfgs/fast_rcnn_seg.yml \
   ${EXTRA_ARGS}
 
 set +x
@@ -59,7 +60,7 @@ NET_FINAL=`grep -B 1 "done solving" ${LOG} | grep "Wrote snapshot" | awk '{print
 set -x
 
 time ./tools/test_net.py --gpu ${GPU_ID} \
-  --def models/${PT_DIR}/${NET}/fast_rcnn_seg/test.prototxt \
+  --def models/${PT_DIR}/${NET}/fast_rcnn_seg_cls/test.prototxt \
   --net ${NET_FINAL} \
   --imdb ${TEST_IMDB} \
   ${EXTRA_ARGS}

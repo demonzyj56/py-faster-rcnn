@@ -1,0 +1,4 @@
+EXP_DIR: fast_rcnn_seg_cls
+TRAIN:
+  SCALES: [400,500,600,700]
+  IMS_PER_BATCH: 1

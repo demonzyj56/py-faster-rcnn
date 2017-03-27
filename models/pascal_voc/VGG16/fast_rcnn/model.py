@@ -15,6 +15,7 @@ class Net(nn.Module):
         self.cls_score = nn.Linear(4096, num_cls)
         self.bbox_pred = nn.Linear(4096, num_cls*4)
         self._init_weights()
+        self._freeze_params()
 
     def forward(self, data, rois):
         conv5_3 = self.conv_layers(data)
@@ -28,3 +29,11 @@ class Net(nn.Module):
         self.cls_score.bias.data.fill_(0)
         self.bbox_pred.weight.data.normal_(std=0.001)
         self.bbox_pred.bias.data.fill_(0)
+
+    def _freeze_params(self):
+        """ Freeze some layers so that their weights are not updated.
+        For VGG16, the first four conv layers are fixed.
+        """
+        for i in xrange(10):
+            for param in self.conv_layers[i].parameters():
+                param.requires_grad = False

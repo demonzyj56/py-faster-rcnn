@@ -221,6 +221,9 @@ __C.GPU_ID = 0
 # Enter debug mode
 __C.DEBUG = False
 
+# Whether to use torch implementation of fast_rcnn.
+__C.USE_TORCH_IMPL = False
+
 
 def get_output_dir(imdb, net=None):
     """Return the directory where experimental artifacts are placed.

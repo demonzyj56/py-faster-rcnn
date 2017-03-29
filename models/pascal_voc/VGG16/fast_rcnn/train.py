@@ -6,6 +6,7 @@
 """
 
 # TODO: write a base class so that this method could be reused.
+# TODO: Add support for multigpu
 
 import torch
 import torch.nn as nn
@@ -28,9 +29,10 @@ from .model import Net
 
 
 class TorchSolverWrapper(object):
-    def __init__(self, solver_prototxt, roidb, output_dir, num_classes, cuda,
+    def __init__(self, solver_prototxt, roidb, output_dir, gpu_id,
                  pretrained_model=None):
-        self.net = Net(num_classes)
+        cuda = len(gpu_id) > 0
+        self.net = Net(21)  # 20(fg) + 1(bg)
         self.criteria = OrderedDict((
             ('loss_cls', nn.CrossEntropyLoss()),
             ('loss_bbox', nn.SmoothL1Loss())
@@ -39,6 +41,7 @@ class TorchSolverWrapper(object):
         if cuda:
             self.net.cuda()
         self.output_dir = output_dir
+        self.gpu_id = gpu_id
 
         if (cfg.TRAIN.HAS_RPN and cfg.TRAIN.BBOX_REG and
             cfg.TRAIN.BBOX_NORMALIZE_TARGETS):
@@ -50,6 +53,8 @@ class TorchSolverWrapper(object):
             print 'Computing bounding-box regression targets...'
             self.bbox_means, self.bbox_stds = \
                     rdl_roidb.add_bbox_regression_targets(roidb)
+            self.bbox_means = torch.Tensor(self.bbox_means)
+            self.bbox_stds = torch.Tensor(self.bbox_stds)
             print 'done'
 
         self._options_from_caffe_prototxt(solver_prototxt)
@@ -57,8 +62,7 @@ class TorchSolverWrapper(object):
         self._step_iter = self.stepvalue.next()
 
         if pretrained_model is not None:
-            # load pretrained model.
-            pass
+            self.net.load_state_dict(torch.load(pretrained_model))
 
     def step(self):
         train_blobs = self.data_loader.get()
@@ -85,7 +89,34 @@ class TorchSolverWrapper(object):
         return loss_cls, loss_bbox
 
     def snapshot(self):
-        return None
+        """Take a snapshot of the network after unnormalizing the learned
+        bounding-box regression weights. This enables easy use at test-time.
+        """
+        scale_bbox_params = (cfg.TRAIN.BBOX_REG and
+                             cfg.TRAIN.BBOX_NORMALIZE_TARGETS and
+                             hasattr(self.net, 'bbox_pred'))
+
+        if scale_bbox_params:
+            orig_0 = self.net.bbox_pred.weight.data.clone()
+            orig_1 = self.net.bbox_pred.bias.data.clone()
+
+            net.bbox_pred.weight *= self.bbox_stds
+            net.bbox_pred.bias = \
+                net.bbox_pred.bias * self.bbox_stds + self.bbox_means
+
+        infix = ('_' + cfg.TRAIN.SNAPSHOT_INFIX
+                 if cfg.TRAIN.SNAPSHOT_INFIX != '' else '')
+        filename = (self.snapshot_prefix + infix +
+                    '_iter_{:d}'.format(self.solver.iter) + '.torchmodel')
+        filename = os.path.join(self.output_dir, filename)
+
+        torch.save(self.net.state_dict(), filename)
+        print 'Wrote snapshot to: {:s}'.format(filename)
+
+        if scale_bbox_params:
+            self.net.bbox_pred.weight.data = orig_0
+            self.net.bbox_pred.bias.data = orig_1
+        return filename
 
     def train_model(self, max_iters):
         last_snapshot_iter = -1
@@ -151,6 +182,7 @@ class TorchSolverWrapper(object):
         self.momentum = solver_param.momentum
         self.weight_decay = solver_param.weight_decay
         self.gamma = solver_param.weight_decay
+        self.snapshot_prefix = solver_param.snapshot_prefix
         if len(self.stepvalue) > 0:
             assert solver_param.lr_policy == 'multistep'
             self.stepvalue = iter(solver_param.stepvalue)

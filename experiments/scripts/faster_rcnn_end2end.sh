@@ -38,13 +38,21 @@ case $DATASET in
     PT_DIR="coco"
     ITERS=490000
     ;;
+  coco_text)
+    TRAIN_IMDB="coco_text_train"
+    TEST_IMDB="coco_text_val"
+    PT_DIR="coco_text"
+    ITERS=100000
+    ;;
   *)
     echo "No dataset given"
     exit
     ;;
 esac
 
-LOG="experiments/logs/faster_rcnn_end2end_${NET}_${EXTRA_ARGS_SLUG}.txt.`date +'%Y-%m-%d_%H-%M-%S'`"
+LOG_PATH="experiments/logs/faster_rcnn_end2end"
+mkdir -p ${LOG_PATH}
+LOG="${LOG_PATH}/${NET}_${EXTRA_ARGS_SLUG}.txt.`date +'%Y-%m-%d_%H-%M-%S'`"
 exec &> >(tee -a "$LOG")
 echo Logging output to "$LOG"
 

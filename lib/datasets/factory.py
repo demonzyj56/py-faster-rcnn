@@ -11,6 +11,7 @@ __sets = {}
 
 from datasets.pascal_voc import pascal_voc
 from datasets.pascal_voc_sr import pascal_voc_sr
+from datasets.coco_text import coco_text
 try:
     from datasets.coco import coco
 except ImportError:
@@ -41,6 +42,11 @@ for year in ['2015']:
     for split in ['test', 'test-dev']:
         name = 'coco_{}_{}'.format(year, split)
         __sets[name] = (lambda split=split, year=year: coco(split, year))
+
+# Set up coco_text_<split>
+for split in ['train', 'val', 'minival', 'test']:
+    name = 'coco_text_{}'.format(split)
+    __sets[name] = (lambda split=split: coco_text(split))
 
 def get_imdb(name):
     """Get an imdb (image database) by name."""

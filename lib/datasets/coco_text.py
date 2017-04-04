@@ -14,6 +14,8 @@ import uuid
 from pycocotools.coco_text import COCO_Text
 from utils.timer import Timer
 
+# TODO: add legibility and language and class attribute filters.
+
 class coco_text(imdb):
     """ Don't subclass coco.  Instead, create a thin wrapper
     around a coco object and call functions when needed.
@@ -177,7 +179,7 @@ class coco_text(imdb):
             p = np.max(prec[pos]) if pos != [] else 0.0
             ap = ap + p / 101.0
 
-        print '~~~~   Detection results for COCO Text   ~~~~'
+        print '~~~~   Detection results for COCO Text {} ~~~~'.format(self._image_set)
         print '~~~~ Average Precision @ IoU 0.5: {:.3f} ~~~~'.format(ap)
         print '~~~~ Evaluate @ {} boxes per image on average ~~~~'.format(
             int(num_dets/len(gt_roidb)))

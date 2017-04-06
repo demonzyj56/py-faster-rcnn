@@ -29,7 +29,7 @@ class coco_text(imdb):
         self._data_path = osp.join(cfg.DATA_DIR, 'coco')
         self._data_name = 'train2014'  # all images are from coco train set
         self._image_set = image_set
-        #  self._coco = coco('train', '2014')  # all images are from train set.
+        self.config = {}
         self._ct = COCO_Text(self._get_ann_file())
         self._classes = ('__background__', '__foreground__')
         self._class_to_ind = {}
@@ -84,6 +84,32 @@ class coco_text(imdb):
             cPickle.dump(gt_roidb, fid, cPickle.HIGHEST_PROTOCOL)
         print 'wrote gt roidb to {}'.format(cache_file)
         return gt_roidb
+
+    def rpn_roidb(self):
+        #  filename = self.config.get('rpn_file', \
+        #      self.config['all_boxes'])
+        filename = self.config['rpn_file']
+        print 'loading {}'.format(filename)
+        assert os.path.exists(filename), \
+               'rpn data not found at: {}'.format(filename)
+        with open(filename, 'rb') as f:
+            box_list = cPickle.load(f)
+        #  if len(box_list) == self.num_classes:
+        #      print 'Converting all_boxes to box_list'
+        #      box_list = self._box_list_from_all_boxes(box_list)
+        return self.create_roidb_from_box_list(box_list, self.gt_roidb())
+
+    #  def _box_list_from_all_boxes(self, all_boxes):
+    #      box_list = []
+    #      for i in xrange(self.num_images):
+    #          boxes = []
+    #          for j in xrange(len(all_boxes)):
+    #              if all_boxes[j][i] == []:
+    #                  continue
+    #              boxes.append(all_boxes[j][i][:, :-1])
+    #          box_list.append(np.concatenate(boxes, axis=0))
+    #          print box_list[-1].shape[0]
+    #      return box_list
 
     def _load_coco_text_annotation(self, index):
         """
@@ -171,7 +197,7 @@ class coco_text(imdb):
 
         fp = np.cumsum(fp).astype(np.float)
         tp = np.cumsum(tp).astype(np.float)
-        rec = fp / num_pos
+        rec = tp / num_pos
         prec = tp / (tp + fp)
         ap = 0.0
         for t in np.arange(0.0, 1.0+cfg.EPS, 0.01, dtype=np.float):
